@@ -15,6 +15,7 @@ npx skills add nofea/agent-skills@<skill-name> -g -y     # global, no prompts
 | Skill | Description |
 | --- | --- |
 | [hello-skill](skills/hello-skill/SKILL.md) | Sample skill that checks the install works (delete it later) |
+| [scaffold-project](skills/scaffold-project/SKILL.md) | Scaffolds a new or existing repo for spec-driven agentic coding: specs/, AGENTS.md + CLAUDE.md, a language-appropriate layout, a Makefile (build/lint/test/security), pre-commit hooks, GitHub Actions CI, and README + CONTRIBUTING |
 
 ## Adding a skill
 

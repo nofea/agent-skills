@@ -1,0 +1,53 @@
+# Contributing to {{project_name}}
+
+## Prerequisites
+
+{{prerequisites}}
+
+Shared tooling: `make`, [pre-commit](https://pre-commit.com), [gitleaks](https://github.com/gitleaks/gitleaks), [semgrep](https://semgrep.dev), [trivy](https://trivy.dev).
+
+Run `make doctor` to see what's missing.
+
+## Setup
+
+```bash
+make setup
+pre-commit install
+```
+
+## Everyday commands
+
+| Command | Use it to |
+| --- | --- |
+| `make fmt` | Format code |
+| `make lint` | Check formatting, run linters and type checks |
+| `make build` | Build |
+| `make test` | Run tests |
+| `make security` | Scan for secrets, insecure code, vulnerable dependencies and misconfigurations |
+| `make check` | Run all of the above, as CI does |
+
+{{extra_commands}}
+
+## Project layout
+
+```
+{{layout_tree}}
+```
+
+## How we work: specs first
+
+Changes start from a spec in [`specs/`](specs/):
+
+- `specs/product.md`: who it's for and what it should do
+- `specs/architecture.md`: how it's built
+- `specs/features/NNN-name/`: one folder per feature, with `requirements.md` (testable acceptance criteria), `design.md` and `tasks.md`
+
+For a new feature, copy an existing feature folder (or write one from scratch), take the next number, set `Status: Draft`, and get it reviewed before building. Add it to `specs/features/README.md`.
+
+## Pull request checklist
+
+- [ ] The relevant spec exists and is up to date (requirements, tasks ticked, status)
+- [ ] Tests cover the new or changed requirements
+- [ ] `make check` passes locally
+- [ ] README.md / CONTRIBUTING.md updated if usage, configuration or setup changed
+- [ ] No secrets, and no disabled lint/security rules without a comment saying why

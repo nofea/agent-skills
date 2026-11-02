@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+{{check_jobs}}
+
+  security:
+    name: Security scans
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@{{ref:actions/checkout}}
+        with:
+          fetch-depth: 0
+
+      - name: Secrets (gitleaks)
+        run: |
+          docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:{{gitleaks_version}} \
+            git /repo --redact --no-banner
+
+      - name: SAST (semgrep)
+        run: |
+          docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD:/src" -w /src semgrep/semgrep:{{semgrep_version}} \
+            semgrep scan --config p/default --error --metrics=off
+
+      - name: Filesystem scan (trivy)
+        uses: aquasecurity/trivy-action@{{ref:aquasecurity/trivy-action}}
+        with:
+          scan-type: fs
+          scanners: vuln,misconfig
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+{{image_scan_steps}}

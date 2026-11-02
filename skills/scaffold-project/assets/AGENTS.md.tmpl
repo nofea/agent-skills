@@ -1,0 +1,52 @@
+# {{project_name}}
+
+{{purpose}}
+
+This file tells coding agents (and humans) how to work in this repo. `CLAUDE.md` imports it, so keep everything here.
+
+## Commands
+
+Always use the Makefile. It is what CI runs.
+
+| Command | What it does |
+| --- | --- |
+| `make doctor` | Check that required tools are installed |
+| `make setup` | Install dependencies |
+| `make build` | Build |
+| `make fmt` | Format code in place |
+| `make lint` | Format check, linters, type checks |
+| `make test` | Run tests |
+| `make security` | Secrets (gitleaks), SAST (semgrep), dependency audit, filesystem scan (trivy) |
+| `make check` | Everything above. **Must pass before you say a task is done.** |
+
+{{component_commands}}
+
+## Layout
+
+```
+{{layout_tree}}
+```
+
+## Workflow: specs first
+
+`specs/` is the source of truth for what to build.
+
+1. Before changing behaviour, find the feature in `specs/features/NNN-name/`. If none exists and the change isn't trivial, draft `requirements.md` (EARS criteria, IDs `R1`, `R2`…), `design.md` and `tasks.md` from the existing ones, and ask for review before coding.
+2. Work through `tasks.md` in order. Tick tasks off as you finish them, and add any new tasks you discover.
+3. Write tests that refer to requirement IDs (`R3`) in their names or comments.
+4. If the code has to differ from the spec, update the spec in the same change, or stop and ask.
+5. Update `specs/architecture.md` when components, data flow or key decisions change. Update `specs/features/README.md` when a status changes.
+
+## Conventions
+
+{{conventions}}
+
+- Don't add a dependency without saying why. Prefer the standard library.
+- Never commit secrets. Configuration comes from environment variables; document new ones in `.env.example` (if present) and in README.md.
+- Keep README.md (for users) and CONTRIBUTING.md (for developers) accurate when you change behaviour, commands or setup.
+- Don't disable a lint rule or security finding without a comment explaining why.
+
+## Boundaries
+
+- Don't run `git commit`, `git push`, or change git history unless the user asks.
+- Don't edit generated or vendored files: {{generated_paths}}.

@@ -1,0 +1,11 @@
+# Paths semgrep should not scan (same syntax as .gitignore)
+.git/
+node_modules/
+vendor/
+target/
+build/
+dist/
+.venv/
+bin/
+obj/
+{{semgrepignore_extra}}
