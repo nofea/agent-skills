@@ -1,0 +1,10 @@
+.git
+.github
+.env
+.env.*
+!.env.example
+specs
+*.md
+!README.md
+# language build outputs and caches (extend from the language reference)
+{{dockerignore_extra}}

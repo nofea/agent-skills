@@ -1,0 +1,54 @@
+# {{project_name}}: developer entry point. The same verbs are used locally, in hooks and in CI.
+# Run `make help` to list targets.
+.DEFAULT_GOAL := help
+SHELL := bash
+.SHELLFLAGS := -eu -o pipefail -c
+
+.PHONY: help doctor setup build fmt fmt-check lint test security security-deps \
+        security-secrets security-sast security-fs check clean
+
+help: ## List targets
+	@grep -hE '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-18s %s\n", $$1, $$2}'
+
+doctor: ## Check that required tools are installed
+	@bash scripts/doctor.sh {{languages}}
+
+setup: ## Install project dependencies
+{{setup_recipe}}
+
+build: ## Compile / package the project
+{{build_recipe}}
+
+fmt: ## Format code in place
+{{fmt_recipe}}
+
+fmt-check: ## Fail if code is not formatted
+{{fmt_check_recipe}}
+
+lint: fmt-check ## Format check + linters + type checks
+{{lint_recipe}}
+
+test: ## Run tests (passes when no tests exist yet)
+{{test_recipe}}
+
+security: security-deps security-secrets security-sast security-fs ## All security scans
+
+security-deps: ## Audit dependencies for known vulnerabilities
+{{security_deps_recipe}}
+
+# >>> repo-wide (remove this block from component Makefiles in polyglot repos)
+security-secrets: ## Scan the working tree for secrets (gitleaks)
+	gitleaks dir . --redact --no-banner
+
+security-sast: ## Static analysis (semgrep)
+	semgrep scan --config p/default --error --metrics=off --quiet
+
+security-fs: ## Vulnerability + misconfiguration scan of the filesystem (trivy)
+	trivy fs --scanners vuln,misconfig --severity HIGH,CRITICAL --exit-code 1 --quiet .
+# <<< repo-wide
+
+check: lint build test security ## Everything CI runs
+
+clean: ## Remove build artifacts
+{{clean_recipe}}
+{{extra_targets}}

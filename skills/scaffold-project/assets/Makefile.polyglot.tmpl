@@ -1,0 +1,36 @@
+# {{project_name}}: root entry point. Each component in COMPONENTS has its own Makefile
+# with the same verbs. Repo-wide scans (secrets, SAST, filesystem) run once here.
+.DEFAULT_GOAL := help
+SHELL := bash
+.SHELLFLAGS := -eu -o pipefail -c
+
+COMPONENTS := {{components}}
+PER_COMPONENT := setup build fmt fmt-check test security-deps clean
+
+.PHONY: help doctor lint security security-secrets security-sast security-fs check $(PER_COMPONENT)
+
+help: ## List targets
+	@grep -hE '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-18s %s\n", $$1, $$2}'
+	@echo "  (per-component: make -C <component> <target>; components: $(COMPONENTS))"
+
+doctor: ## Check that required tools are installed
+	@bash scripts/doctor.sh {{languages}}
+
+$(PER_COMPONENT): ## Run the target in every component
+	@for c in $(COMPONENTS); do echo "==> $$c: $@"; $(MAKE) -C $$c $@; done
+
+lint: ## Format check + linters in every component
+	@for c in $(COMPONENTS); do echo "==> $$c: lint"; $(MAKE) -C $$c lint; done
+
+security: security-deps security-secrets security-sast security-fs ## All security scans
+
+security-secrets: ## Scan the working tree for secrets (gitleaks)
+	gitleaks dir . --redact --no-banner
+
+security-sast: ## Static analysis (semgrep)
+	semgrep scan --config p/default --error --metrics=off --quiet
+
+security-fs: ## Vulnerability + misconfiguration scan of the filesystem (trivy)
+	trivy fs --scanners vuln,misconfig --severity HIGH,CRITICAL --exit-code 1 --quiet .
+
+check: lint build test security ## Everything CI runs
