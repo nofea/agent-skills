@@ -82,6 +82,7 @@ Work in this order:
    | `licenses/<id>.txt` | `LICENSE` |
    | `gitleaks.toml` | `.gitleaks.toml` |
    | `semgrepignore` | `.semgrepignore` |
+   | `eclipse-java-allman.xml` | `config/eclipse-java-allman.xml` (Java only) |
 
 4. **Language glue** from the language reference: Makefile target bodies, tool config (lint, format, type-check, test), `.gitignore` entries, pre-commit hooks, CI setup steps, Dependabot ecosystem, and a Dockerfile for services. The wiring for security tools is in [security.md](references/security.md).
 

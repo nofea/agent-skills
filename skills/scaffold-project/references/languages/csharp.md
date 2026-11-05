@@ -15,6 +15,8 @@ dotnet new gitignore
 dotnet new editorconfig       # merge: keep its C# rules, add the [*] basics from assets/editorconfig
 ```
 
+In the merged `.editorconfig`, keep `csharp_new_line_before_open_brace = all` (Allman braces) and set `csharp_prefer_braces = true:warning`.
+
 **Delete the template's sample test** (`UnitTest1.cs`). Trim `Program.cs` to a minimal entry point. The webapi template's WeatherForecast sample also goes; leave just the builder/app setup.
 
 ## Layout
