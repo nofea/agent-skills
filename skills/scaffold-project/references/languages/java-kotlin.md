@@ -1,6 +1,6 @@
 # Java / Kotlin
 
-Tooling: **Gradle** (Kotlin DSL, wrapper committed) · **Spotless** (google-java-format / ktlint) · lint: `javac -Xlint:all -Werror` + **PMD** for Java, **detekt** for Kotlin · **JUnit 5** · **OWASP dependency-check**. JDK: the latest LTS, set through a Gradle toolchain.
+Tooling: **Gradle** (Kotlin DSL, wrapper committed) · **Spotless** (Eclipse formatter with an Allman profile / ktlint) · lint: `javac -Xlint:all -Werror` + **PMD** for Java, **detekt** for Kotlin · **JUnit 5** · **OWASP dependency-check**. JDK: the latest LTS, set through a Gradle toolchain.
 
 ## Init
 
@@ -39,7 +39,7 @@ plugins {
 java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
 tasks.withType<JavaCompile>().configureEach { options.compilerArgs.addAll(listOf("-Xlint:all", "-Werror")) }
 spotless {
-    java { googleJavaFormat() }             // Kotlin: kotlin { ktlint() } ; kotlinGradle { ktlint() }
+    java { eclipse().configFile(rootProject.file("config/eclipse-java-allman.xml")) }   // Kotlin: kotlin { ktlint() } ; kotlinGradle { ktlint() }
 }
 pmd { isConsoleOutput = true; ruleSetFiles = files(); ruleSets = listOf("category/java/bestpractices.xml", "category/java/errorprone.xml", "category/java/security.xml") }
 dependencyCheck { failBuildOnCVSS = 7.0f; nvd { apiKey = System.getenv("NVD_API_KEY") } }
@@ -49,7 +49,7 @@ tasks.test {
 }
 ```
 
-Put plugin versions in `gradle/libs.versions.toml`. Look them up on the Gradle Plugin Portal. OWASP dependency-check needs an **NVD API key** (free from nvd.nist.gov). Without one, the first run takes a very long time. Document `NVD_API_KEY` in CONTRIBUTING.md, and add it as a CI secret.
+Java formatting uses Allman braces, which google-java-format can't produce. Copy `assets/eclipse-java-allman.xml` to `config/eclipse-java-allman.xml`. Kotlin stays on ktlint's standard style. Put plugin versions in `gradle/libs.versions.toml`. Look them up on the Gradle Plugin Portal. OWASP dependency-check needs an **NVD API key** (free from nvd.nist.gov). Without one, the first run takes a very long time. Document `NVD_API_KEY` in CONTRIBUTING.md, and add it as a CI secret.
 
 ## Makefile recipes
 

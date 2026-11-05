@@ -45,7 +45,19 @@ endif()
 
 `CMakePresets.json`: a `dev` configure preset (Ninja, `Debug`, `binaryDir: build/dev`), a `release` preset, matching build presets, and a `dev` test preset with `"output": {"outputOnFailure": true}`.
 
-`.clang-format`: `BasedOnStyle: Google` (or LLVM). `.clang-tidy`:
+`.clang-format` (Allman braces; short lambdas and initialisers stay on one line):
+```yaml
+BasedOnStyle: Google
+BreakBeforeBraces: Allman
+AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortLambdasOnASingleLine: All
+```
+
+`.clang-tidy`:
 ```yaml
 Checks: "-*,bugprone-*,cert-*,clang-analyzer-*,concurrency-*,cppcoreguidelines-*,modernize-*,performance-*,portability-*,readability-*,-modernize-use-trailing-return-type,-readability-magic-numbers,-cppcoreguidelines-avoid-magic-numbers"
 WarningsAsErrors: "*"

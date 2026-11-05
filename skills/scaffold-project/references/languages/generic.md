@@ -7,7 +7,7 @@ Use this for languages without a curated reference (Ruby, PHP, Elixir, Swift, Da
 | Concern | Choose | Examples |
 | --- | --- | --- |
 | Init / package manager | the official one | `bundle init`, `composer init`, `mix new`, `swift package init`, `dart create`, `zig init`, `cabal init` |
-| Formatter | the official or near-universal one | rubocop -a / standardrb, php-cs-fixer, `mix format`, swift-format, `dart format`, `zig fmt`, ormolu/fourmolu |
+| Formatter | the official or near-universal one | rubocop -a / standardrb, php-cs-fixer, `mix format`, SwiftFormat, `dart format`, `zig fmt`, ormolu/fourmolu |
 | Linter / type checker | the most adopted one, with security rules if available | rubocop + brakeman (Rails), phpstan/psalm, credo + sobelow (Phoenix), swiftlint, `dart analyze`, hlint |
 | Tests | the default framework | rspec/minitest, phpunit/pest, ExUnit, XCTest/swift-testing, `dart test`, `zig build test`, hspec |
 | Dependency audit | the ecosystem's advisory tool, otherwise `osv-scanner scan source -r .` | bundler-audit, `composer audit`, `mix deps.audit`/`mix hex.audit` |
@@ -15,6 +15,8 @@ Use this for languages without a curated reference (Ruby, PHP, Elixir, Swift, Da
 
 ## Rules
 
+- PHP: set php-cs-fixer's `braces_position` rule with `control_structures_opening_brace`, `functions_opening_brace` and `classes_opening_brace` all set to `next_line_unless_newline_at_signature_end`, and set `control_structure_continuation_position` to `next_line`, so code uses Allman braces.
+- Swift: use SwiftFormat, with `--allman true` in `.swiftformat`, so code uses Allman braces. Apple's swift-format has no Allman option.
 - Same Makefile verbs: `setup build fmt fmt-check lint test security-deps clean`. `build` can be a no-op with a comment for interpreted languages that have no build step.
 - `test` must pass when there are no tests yet.
 - Use the language's conventional layout (`lib/` + `spec/`, `src/` + `tests/`, `Sources/` + `Tests/` …). Don't invent one.

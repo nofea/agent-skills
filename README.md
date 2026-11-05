@@ -15,6 +15,7 @@ npx skills add nofea/agent-skills@<skill-name> -g -y     # global, no prompts
 | Skill | Description |
 | --- | --- |
 | [scaffold-project](skills/scaffold-project/SKILL.md) | Sets up a new or existing repo for spec-driven agentic coding |
+| [readable-code](skills/readable-code/SKILL.md) | Writes clean, human-readable code in any language |
 
 ### scaffold-project
 
@@ -29,6 +30,7 @@ What a scaffolded project gets:
 - **Specs:** `specs/` holds the product, the architecture and one folder per feature. Agents read it before coding and update it as they work.
 - **Agent instructions:** `AGENTS.md` covers how to work in the repo, and `CLAUDE.md` imports it.
 - **Language-appropriate layout:** folders and tool config for Python, TypeScript/Node, Go, Rust, Java/Kotlin, C#/.NET or C/C++, with a generic fallback for anything else. Projects can be a CLI, library, web service/API or web app.
+- **Allman braces:** generated formatter configs use Allman in C, C++, C#, Java, PHP and Swift. Other languages keep their standard style.
 - **Makefile:** the same verbs in every language: `build`, `lint`, `fmt`, `test`, `security`, `check` and `doctor`.
 - **Automation:** pre-commit hooks, GitHub Actions CI and Dependabot.
 - **Security scanning:** gitleaks, semgrep, trivy and a dependency audit.
@@ -43,6 +45,22 @@ How it works:
 5. It runs `make doctor` and `make check`, then reports the results and your next steps.
 
 The skill never runs git commands that change state, so committing stays with you. It also asks before installing tools or overwriting existing files.
+
+### readable-code
+
+Makes agents write code in one consistent, readable style. Once installed, it applies whenever your agent writes or edits code.
+
+```bash
+npx skills add nofea/agent-skills@readable-code
+```
+
+The rules:
+
+- **Allman braces** in C, C++, C#, Java, PHP and Swift, with braces on every block. Other languages keep their standard style, because their formatters can't do Allman or, in Go, it doesn't compile.
+- **Blank lines** around `if`/`else`, loops, `switch`/`match`, `try`/`catch` and similar blocks, in every language.
+- **Core guidelines** for each language, such as the C++ Core Guidelines, PEP 8 and Effective Go. The agent reads only the ones it needs.
+
+If a repo enforces its own style through a formatter, linter or CI check, that style wins and the agent tells you. Otherwise, new code uses these rules and small edits match the function around them. Unchanged code is left alone. The skill includes sample formatter configs, which are added to a repo only if you ask.
 
 ## Adding a skill
 
