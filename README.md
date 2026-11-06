@@ -16,6 +16,7 @@ npx skills add nofea/agent-skills@<skill-name> -g -y     # global, no prompts
 | --- | --- |
 | [scaffold-project](skills/scaffold-project/SKILL.md) | Sets up a new or existing repo for spec-driven agentic coding |
 | [readable-code](skills/readable-code/SKILL.md) | Writes clean, human-readable code in any language |
+| [simple-software-design](skills/simple-software-design/SKILL.md) | Keeps code structure simple, with SOLID, DRY and KISS in any language |
 
 ### scaffold-project
 
@@ -61,6 +62,28 @@ The rules:
 - **Core guidelines** for each language, such as the C++ Core Guidelines, PEP 8 and Effective Go. The agent reads only the ones it needs.
 
 If a repo enforces its own style through a formatter, linter or CI check, that style wins and the agent tells you. Otherwise, new code uses these rules and small edits match the function around them. Unchanged code is left alone. The skill includes sample formatter configs, which are added to a repo only if you ask.
+
+### simple-software-design
+
+Makes agents design simple, elegant code structure in any language. Once installed, it applies whenever your agent writes or edits code, and when you ask it to review or audit a design. It covers functions, types, modules, and their boundaries and dependencies. It only covers system design, such as microservices or databases, if you ask.
+
+```bash
+npx skills add nofea/agent-skills@simple-software-design
+```
+
+The rules:
+
+- **Priority:** language requirements come first, then your repo's architecture docs, then SOLID, DRY and KISS, in that order.
+- **Real needs only:** SOLID and DRY only win over a concrete problem in today's code. They never justify interfaces, layers or extension points for an imagined future.
+- **DRY means knowledge:** two places that encode the same rule get merged straight away. Code that only looks alike stays separate.
+- **Native idioms:** principles are applied through functions, modules, traits or protocols, with no classes added just to satisfy a principle.
+
+How it works:
+
+- **Small changes** follow the existing structure, with a quick check against the principles.
+- **Larger changes** that add a module, boundary, dependency or pattern get a few lines on the structure and trade-off, and then the agent carries on. It stops to ask only about choices that are hard to reverse, such as a new external dependency or a public API.
+- **Existing code** is improved only where the task touches it. Other problems are flagged and left unchanged.
+- **Reviews** start by confirming what to review. Findings are ordered by severity, with the location, principle, harm and simplest fix. The agent then offers to apply the ones you choose.
 
 ## Adding a skill
 
