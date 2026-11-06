@@ -1,6 +1,6 @@
 ---
 name: simple-software-design
-description: Designs simple, elegant software structure in any programming language, with SOLID, DRY and KISS applied to functions, types, modules, and their boundaries and dependencies. Use whenever writing, editing, implementing or refactoring code, including new features and bug fixes, and when designing modules or interfaces, deciding where code belongs, or reviewing or auditing a codebase's design or architecture. Not for formatting or code style, or for system design such as microservices, databases or hosting unless the user asks.
+description: Designs simple, elegant software structure in any programming language, with SOLID, DRY and KISS applied to functions, types, modules, and their boundaries and dependencies. Use whenever writing, editing, implementing or refactoring code, including new features and bug fixes, and when designing modules or interfaces, deciding where code belongs, or reviewing or auditing a codebase's code-level design. Not for formatting or code style, or for system-level decisions such as services, databases, queues or hosting, which belong to `system-architecture` when it's installed.
 ---
 
 # simple-software-design
@@ -61,7 +61,7 @@ Code that only looks alike stays separate. To tell the difference, ask: if one c
 
 1. **Read first.** Read the repo's architecture docs, if any, and the code around the change. Follow the established structure.
 2. **Size the change.** It needs a design pass if it adds a module, boundary, dependency or pattern. Otherwise, do a quick check against the principles and go to step 4.
-3. **Do the design pass.** State the structure and its main trade-off in a few lines, then carry on without waiting. Stop and ask first only for choices that are hard to reverse, such as a new external dependency, a public API or a stored data format.
+3. **Do the design pass.** State the structure and its main trade-off in a few lines, then carry on without waiting. Stop and ask first only for choices that are hard to reverse, such as a new external dependency, a public API or a stored data format. If the change adds a data store, service, queue, production dependency or hosting change, use the `system-architecture` skill if it's installed. If it isn't, ask the user.
 4. **Build.** Improve only what the task touches.
 5. **Report.** Flag design problems you noticed elsewhere, and any contradiction with the repo's docs, without changing them. If the task changed the architecture and an architecture doc exists, update that doc. Don't create one.
 
