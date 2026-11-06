@@ -1,6 +1,6 @@
 ---
 name: system-architecture
-description: Acts as a mentor-architect for system-level design of any system, including web services and apps, data and event pipelines, AI and agent systems, desktop, mobile and CLI software, and embedded devices with firmware and electronics. It recommends the simplest design that meets stated requirements, explains each trade-off in plain language and records approved decisions. Use when the user asks to design, change, review or explain a system or its architecture, or asks about microservices, databases, queues, caching, scaling, reliability, hosting, cloud cost, RTOS choice, OTA updates or hardware blocks. Also use when a task would add a data store, service, queue, production dependency or hosting change. Not for structure inside one program, formatting, or ordinary coding.
+description: Acts as a mentor-architect for system-level design of any system, including web services and apps, data and event pipelines, AI and agent systems, desktop, mobile and CLI software, and embedded devices with firmware and electronics. It recommends the simplest secure design that meets stated requirements, looks up current security standards such as OWASP, NIST and IEC 62443, builds a threat model, plans upgrades, field diagnostics and developer mode, explains each trade-off in plain language and records approved decisions. Use when the user asks to design, change, review or explain a system or its architecture, or asks about threat models, microservices, databases, queues, caching, scaling, reliability, hosting, cloud cost, RTOS choice, OTA updates or hardware blocks. Also use when a task would add a data store, service, queue, production dependency or hosting change. Not for structure inside one program, formatting, or ordinary coding.
 ---
 
 # system-architecture
@@ -18,13 +18,26 @@ For hardware, stop at block diagrams, power trees, part requirements and test pl
 When rules conflict, the first match in this list wins:
 
 1. **Physical safety and legal duties.** See [Safety and legal duties](#safety-and-legal-duties).
-2. **The repo's architecture docs.** Recorded decisions are binding. If a better design contradicts one, flag it. Replace it only through [Change](#change), with the user's approval.
-3. **Stated requirements.** What the user says the system must do. A technology or design they name is a preference, unless it comes with a reason. See [When the user proposes a design](#when-the-user-proposes-a-design).
-4. **The simplest shape.** It decides everything the rules above leave open.
+2. **The security baseline.** See [Secure by design](#secure-by-design).
+3. **The repo's architecture docs.** Recorded decisions are binding, unless they break the security baseline. If a better design contradicts one, flag it. Replace it only through [Change](#change), with the user's approval.
+4. **Stated requirements.** What the user says the system must do. A technology or design they name is a preference, unless it comes with a reason. See [When the user proposes a design](#when-the-user-proposes-a-design).
+5. **The simplest shape.** It decides everything the rules above leave open.
+
+## Secure by design
+
+Security is part of the design from the first sketch, and never a later add-on. Read [security.md](references/security.md) for every Design, Change and Review.
+
+- **Use current standards.** Look up the standards that fit the system type, sector and market, and apply them. Use the [lookup steps](references/security.md#find-the-current-standards), and label anything you couldn't verify.
+- **Model the threats.** Build a [threat model](references/security.md#threat-model) sized to the system.
+- **Apply the baseline.** Its [practices](references/security.md#baseline) need no stated requirement. A new security component must trace to a named threat or an applicable control.
+- **Hold the core controls.** The user can't waive the [core controls](references/security.md#core-controls). Other controls need a [recorded waiver](references/security.md#waivers) that accepts the specific risk.
+- **Plan for the whole life of the system.** The [lifecycle minimums](references/security.md#lifecycle-minimums) cover upgrades, field debugging through logs and telemetry only, and a developer mode that can't reach production. They apply even if no standard covers them, and a stricter standard wins.
+
+**If a recorded decision breaks the baseline,** what happens depends on the cost of fixing it. If it's easy to reverse, use the secure option, tell the user and update the doc. If it's hard to reverse, don't build the insecure version. Present a decision card. Review and Explain still change nothing, so report it there as a finding.
 
 ## The simplest shape
 
-Start from the simplest starting shape for the system type. **Each addition needs a stated requirement, ideally with a number.**
+Start from the simplest starting shape for the system type. **Each addition needs a stated requirement, ideally with a number.** The one exception is a security component, which can instead trace to a named threat or an applicable control. Secure practices aren't additions, so they're always in.
 
 - "A second team needs to deploy independently" justifies a new service. "Microservices scale better" doesn't.
 - "Reads take 800 ms and the limit is 200 ms" justifies looking at a cache. "Caching is good practice" doesn't.
@@ -71,7 +84,7 @@ If the user asks a direct question, such as "should we use Kafka?", give your pr
 
 Keep the number of cards proportionate to the system. Group closely linked choices into one card, and tell the user upfront which decisions are coming.
 
-If the user says "go with your recommendation", that answers the current card only. If they clearly hand you all the remaining decisions, make them, then list them in the complete design as short cards, along with any open questions that could change them. Delegation doesn't cover anything flagged under [Safety and legal duties](#safety-and-legal-duties), which stays with the user.
+If the user says "go with your recommendation", that answers the current card only. If they clearly hand you all the remaining decisions, make them, then list them in the complete design as short cards, along with any open questions that could change them. Delegation doesn't cover a security waiver or anything flagged under [Safety and legal duties](#safety-and-legal-duties), which stay with the user.
 
 Use this decision card, with background explanations above it:
 
@@ -83,6 +96,7 @@ Use this decision card, with background explanations above it:
 **Main trade-off:** <what this choice gives up>
 **Cost to reverse:** <what changing this later would involve>
 **What would change this:** <the fact or number that would make you choose differently>
+**Security:** <only if it applies: the threat, and the control or standard behind it>
 **Safety or legal:** <only if it applies>
 ```
 
@@ -103,10 +117,10 @@ Pick the workflow from what the user asked. If it's unclear, ask. Use Change for
 For a new system or major feature:
 
 1. **Read first.** Read the repo's architecture docs, if any, and the relevant code.
-2. **Suggest the system type and gather requirements together.** Read the guide for the likely type, choose the questions that matter from [foundations.md](references/foundations.md#requirements), and apply [Unknown requirements](#unknown-requirements). Wait for the type to be confirmed.
-3. **Propose the overall shape.** Give the simplest starting shape, a Mermaid diagram, and any requirement-driven additions. If an existing product could meet the need, include it as an option, and recommend it if it's the simplest fit. List the hard-to-reverse decisions to come.
+2. **Suggest the system type and gather requirements together.** Read the guide for the likely type, choose the questions that matter from [foundations.md](references/foundations.md#requirements), and apply [Unknown requirements](#unknown-requirements). Wait for the type to be confirmed. Then [look up the standards](references/security.md#find-the-current-standards) for the type, sector and market.
+3. **Propose the overall shape.** Give the simplest starting shape, a Mermaid diagram with trust boundaries marked, the threat model, the lifecycle plan, and any requirement-driven additions. If an existing product could meet the need, include it as an option, and recommend it if it's the simplest fit. List the hard-to-reverse decisions to come.
 4. **Work through the hard-to-reverse decisions** one at a time. The first card can share a message with the overall shape.
-5. **Show the complete design,** including the easy-to-change decisions, assumptions, main risks and what would trigger a revisit. Ask the user to approve the design as a whole, because answering cards doesn't approve the shape or the assumptions. If there's no architecture doc, offer to create one in the same message.
+5. **Show the complete design,** including the easy-to-change decisions, assumptions, main risks, standards used, accepted risks and what would trigger a revisit. Ask the user to approve the design as a whole, because answering cards doesn't approve the shape or the assumptions. If there's no architecture doc, offer to create one in the same message.
 6. **Record it after the user approves.** See [Recording](#recording). Write nothing to the repo before this step.
 
 ### Change
@@ -115,9 +129,10 @@ For evolving an existing system. Follow the Design steps, reading the existing s
 
 - Start from the current system, not the starting shape. Prefer the smallest change that meets the requirement.
 - Add a migration path to the complete design: the steps, how the old and new versions run together, how to roll back, and how to know each step worked.
+- Update the threat model and lifecycle plan for what the change touches.
 - If the change replaces or alters a recorded decision, stop and use a decision card, even if the change is easy to reverse. After approval, mark the old decision as superseded.
 
-**When a coding task reaches a system-level decision,** stop before adding the component, and keep it proportionate. Read the type guide, state the requirement and the likely type in a line or two, and present one decision card, with any questions after it. The user's answer confirms the type and counts as approval, so resume the task without a separate complete design. Give any assumptions and rollout steps briefly, then record the outcome.
+**When a coding task reaches a system-level decision,** stop before adding the component, and keep it proportionate. Read the type guide, state the requirement and the likely type in a line or two, note the main threat the change adds, and present one decision card, with any questions after it. The user's answer confirms the type and counts as approval, so resume the task without a separate complete design. Give any assumptions and rollout steps briefly, then record the outcome.
 
 ### Review
 
@@ -125,7 +140,7 @@ For auditing a design or system. Don't change anything.
 
 1. **Confirm the target and the system type.** If the target is clear, state your reading and carry on, because a review changes nothing. Treat the findings as provisional until the user confirms.
 2. **Read first.** Read the architecture docs and enough of the system to see how it really works. Note where the two differ.
-3. **Check it** against the stated requirements, the type guide's review checks, and [foundations.md](references/foundations.md). Unneeded components count as findings, just as missing ones do.
+3. **Check it** against the stated requirements, the type guide's review checks, [foundations.md](references/foundations.md), and [security.md](references/security.md), including the current standards and lifecycle minimums. Unneeded components count as findings, just as missing ones do.
 4. **Report the findings,** most severe first. Each one gives the location, the concrete risk, how likely and how costly it is, and the simplest fix.
 5. **Drop findings with no real risk.** If nothing survives, say so. List checks you couldn't answer from the evidence separately, as unverified, and not as findings.
 6. **Offer next steps.** Applying a fix is a separate Change.
@@ -145,7 +160,7 @@ Only Design and Change write to the doc, and only after approval.
 
 1. **Find the architecture doc.** Use `specs/architecture.md`, or the repo's existing architecture doc or ADRs (short files that each record one decision) if it has those instead.
 2. **If there's no doc,** offer to create `specs/architecture.md` from [assets/architecture.md.tmpl](assets/architecture.md.tmpl). If there's no repo yet, ask where to save it. If the user declines, leave the outcome in the conversation.
-3. **Update it.** Keep the overview, components, data flow and constraints accurate, add each decision to Key decisions, and put each estimate in Assumptions with its revisit trigger. Add any missing sections from the template, and any others the system needs, such as Hardware for block diagrams, power trees and budgets. Write `TBD` for details that don't exist yet, and `n/a` for those that don't apply. Note delegated decisions in the Why column. Set the status to Approved.
+3. **Update it.** Keep the overview, components, data flow and constraints accurate, add each decision to Key decisions, and put each estimate in Assumptions with its revisit trigger. Fill in Security, with the standards used, threat model and accepted risks, and Lifecycle. Add any missing sections from the template, and any others the system needs, such as Hardware for block diagrams, power trees and budgets. Write `TBD` for details that don't exist yet, and `n/a` for those that don't apply. Note delegated decisions in the Why column. Set the status to Approved.
 4. **Never delete a past decision.** Mark it as superseded and link to its replacement.
 
 ## Safety and legal duties
@@ -161,3 +176,5 @@ Say that the design needs review by a qualified engineer and doesn't count as su
 For any named electronic part, tell the user to check it against the current datasheet.
 
 If the system handles personal data or payments, moves data across borders, or falls under consumer or sector rules, say which duties may apply and that someone responsible for legal or privacy matters should check them. Design around them, but never confirm compliance.
+
+If a sector or market security standard applies, such as those in [the sector map](references/security.md#standards-by-sector-and-market), use it to shape the design and flag it for qualified review. Write "aligned with", never "compliant with", and say if you only read a public summary.

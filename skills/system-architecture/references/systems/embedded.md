@@ -1,6 +1,6 @@
 # Embedded
 
-Source: *Making Embedded Systems* by Elecia White, [RFC 9019: a firmware update architecture for IoT](https://www.rfc-editor.org/rfc/rfc9019) and [NIST IR 8259: IoT device cybersecurity](https://csrc.nist.gov/pubs/ir/8259/final).
+Source: *Making Embedded Systems* by Elecia White, [RFC 9019: a firmware update architecture for IoT](https://www.rfc-editor.org/rfc/rfc9019), [NIST IR 8259: IoT device cybersecurity](https://csrc.nist.gov/pubs/ir/8259/final), [ETSI EN 303 645](https://www.etsi.org/technologies/consumer-iot-security) and [ISA/IEC 62443](https://www.isa.org/standards-and-publications/isa-standards/isa-iec-62443-series-of-standards).
 
 Read [electronics.md](electronics.md) as well. For physical risk or regulated products, apply the safety rule in [SKILL.md](../../SKILL.md#safety-and-legal-duties) from the start.
 
@@ -44,9 +44,21 @@ If a device switches a heater, motor, valve, lock or other load that could cause
 
 A qualified engineer confirms these. Don't choose protection methods yourself.
 
+## Security and lifecycle
+
+Apply [security.md](../security.md). For this type:
+
+- **Threats:** physical access, firmware tampering, extracted keys, cloned devices, spoofed commands, and a compromised device reaching the rest of the network. Weigh these with the [physical risks](#devices-that-act-on-the-physical-world) if the device moves anything
+- **Maintenance:** signed firmware, verified boot, a safe rollback and rollback protection against older vulnerable versions, per-device keys you can rotate or revoke, and a stated support period. Having no OTA is a decision, recorded as an accepted risk
+- **Diagnostics:** fault codes, reset reasons, crash records and the firmware version, buffered through outages and sent with telemetry. Production units keep debug ports and serial consoles locked, and returned units are opened only in a lab, after their keys are erased
+- **Developer mode:** dev-only boards with open debug ports, a separate build and separate dev signing keys. Production units must reject dev firmware. Lock debug ports as a production line step
+
+Security affects memory, power, boot time and part choice, so include it in the [budgets](#budgets) and pick a processor that supports it.
+
 ## Hard to reverse
 
 - The processor family and its toolchain
+- Secure boot, the root of trust and any secure element
 - The bootloader and the partition layout
 - Device identity, keys and how they're provisioned
 - Wire protocols and stored data formats in shipped devices
@@ -62,6 +74,9 @@ A qualified engineer confirms these. Don't choose protection methods yourself.
 - Reasoning about average timing, when the worst case missed a deadline
 - Flash wearing out because logs are written too often
 - Assuming the connection and clock are always available
+- Choosing a processor with no secure boot or protected key storage
+- Dev firmware or dev keys left on production units
+- No telemetry, so field faults can't be diagnosed without physical access
 
 ## Review checks
 
@@ -73,3 +88,7 @@ A qualified engineer confirms these. Don't choose protection methods yourself.
 - How do you learn about faults in the field?
 - For any physical load, what's the safe state in each failure, and is it enforced on the device?
 - Which safety, radio or product rules apply? Which need a qualified engineer?
+- Are firmware updates signed, and is the private signing key protected?
+- Will production units reject dev firmware, and are their debug ports locked?
+- Can a field fault be diagnosed from telemetry alone?
+- How long will devices get security updates, and what happens after that?

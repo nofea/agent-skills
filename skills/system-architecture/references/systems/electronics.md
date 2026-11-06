@@ -59,6 +59,7 @@ Always apply the safety rule. Raise these points in any battery decision, and ha
 - Forgetting peak current, such as a radio transmitting, which can reset the device
 - Choosing a part with a long lead time or a planned end of life
 - No test points or debug access on the first board
+- Debug access left open on production units
 - Leaving certification, such as FCC or CE, until the end
 - Assuming a sensor's headline accuracy holds across temperature
 
@@ -67,7 +68,8 @@ Always apply the safety rule. Raise these points in any battery decision, and ha
 - Is each named part confirmed against its current datasheet and availability?
 - Does the power tree cover peak current, with margin?
 - Is there a second source for each high-risk part?
-- How will each board be programmed and tested in production?
+- How will each board be programmed and tested in production, and how is debug access locked afterwards?
+- If keys are stored on the device, does the hardware protect them?
 - Which certifications apply, and what's their cost?
 - Does the bill of materials meet the target unit cost at the planned volume?
 - Has a qualified engineer been named for anything covered by the safety rule?
