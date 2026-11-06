@@ -1,6 +1,6 @@
 # Services and web apps
 
-Source: [The Twelve-Factor App](https://12factor.net/), the [AWS Well-Architected Framework](https://aws.amazon.com/architecture/well-architected/), [Site Reliability Engineering](https://sre.google/sre-book/table-of-contents/), [MonolithFirst](https://martinfowler.com/bliki/MonolithFirst.html) and *Designing Data-Intensive Applications* by Martin Kleppmann.
+Source: [The Twelve-Factor App](https://12factor.net/), the [AWS Well-Architected Framework](https://aws.amazon.com/architecture/well-architected/), [Site Reliability Engineering](https://sre.google/sre-book/table-of-contents/), [MonolithFirst](https://martinfowler.com/bliki/MonolithFirst.html) *Designing Data-Intensive Applications* by Martin Kleppmann, the [OWASP Top 10](https://owasp.org/Top10/), [OWASP ASVS](https://owasp.org/www-project-application-security-verification-standard/) and the [OWASP API Security Top 10](https://owasp.org/API-Security/).
 
 **What's different:** many users share one system over a network, so most hard problems come from shared data and concurrent requests.
 
@@ -18,9 +18,19 @@ Source: [The Twelve-Factor App](https://12factor.net/), the [AWS Well-Architecte
 | Full-text search outgrows database search | A search engine | Keeping a second copy of data in sync |
 | Separate teams block each other, or one part needs very different scaling | Extract one service | Network failures, versioning, more operations |
 
+## Security and lifecycle
+
+Apply [security.md](../security.md). For this type:
+
+- **Threats:** broken access control, injection, stolen sessions or credentials, one tenant reaching another's data, and abuse of public endpoints
+- **Maintenance:** upgrades that run alongside the old version, automated dependency and base image updates, and certificate and secret rotation without downtime
+- **Diagnostics:** structured logs and traces with a correlation ID across each request, and error tracking tagged with the release. Nobody opens a shell on a production server. Data repairs run as reviewed migrations
+- **Developer mode:** local environment with seeded fake data. Test logins and auth bypasses are excluded from production builds
+
 ## Hard to reverse
 
 - The data model and tenant isolation, if you serve several customers
+- How authorization is modelled, because checks spread through every feature
 - Public API shapes and versioning
 - User identity and how accounts are stored
 - Which database engine you use
@@ -34,6 +44,8 @@ Source: [The Twelve-Factor App](https://12factor.net/), the [AWS Well-Architecte
 - Migrations that lock a busy table or can't run alongside the old code
 - Retried payments or orders running twice, because the action isn't idempotent
 - Backups that have never been restored
+- Authorization checked in the UI, but not on the server
+- Admin or debug endpoints left reachable in production
 
 ## Review checks
 
@@ -44,3 +56,6 @@ Source: [The Twelve-Factor App](https://12factor.net/), the [AWS Well-Architecte
 - Have backups been restored in a test?
 - Can one customer ever see another customer's data?
 - Is there monitoring on errors, latency and saturation?
+- Is every endpoint authenticated and authorized by default?
+- Can a fault be diagnosed from logs and traces, with no production shell?
+- How fast can a fix or dependency patch reach production?

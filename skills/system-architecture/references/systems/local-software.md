@@ -1,6 +1,6 @@
 # Local software
 
-Source: [Local-first software](https://www.inkandswitch.com/local-first/) by Ink & Switch and [The Twelve-Factor App](https://12factor.net/) for any backend it uses.
+Source: [Local-first software](https://www.inkandswitch.com/local-first/) by Ink & Switch [The Twelve-Factor App](https://12factor.net/) for any backend it uses, [OWASP MASVS](https://mas.owasp.org/MASVS/) for mobile and the [OWASP Desktop App Security Top 10](https://owasp.org/www-project-desktop-app-security-top-10/).
 
 **What's different:** the software runs on devices you don't control. Old versions stay in use, networks come and go, and you can't fix user data directly.
 
@@ -21,9 +21,19 @@ Source: [Local-first software](https://www.inkandswitch.com/local-first/) by Ink
 
 An **atomic save** writes a temporary file, then swaps it into place, so a crash leaves the old version or the new one. **CRDTs** (conflict-free replicated data types) are data structures that merge concurrent edits automatically. They avoid conflicts in the data, but the merged result may still not be what users expected.
 
+## Security and lifecycle
+
+Apply [security.md](../security.md). For this type:
+
+- **Threats:** malicious files or arguments, tampered updates, secrets readable on disk, other programs on the same machine, and overly broad permissions. Assume the user's device can be inspected, so anything shipped in the app isn't secret
+- **Maintenance:** signed updates that can recover from failure, format migrations with a backup, and a stated support period for old versions
+- **Diagnostics:** a local log the user can export, and opt-in crash reports with personal data removed. Remote access to a user's machine isn't a support path
+- **Developer mode:** a dev build or dev signing key, excluded from release builds. Use the operating system's keychain or secure storage for real credentials
+
 ## Hard to reverse
 
 - Local file and database formats
+- The update and signing mechanism, because old versions must be able to trust the new one
 - CLI commands, flags and output that scripts depend on
 - The sync and conflict model
 - Platform and framework choices
@@ -37,6 +47,8 @@ An **atomic save** writes a temporary file, then swaps it into place, so a crash
 - Treating sync as a small feature, then discovering it's a distributed system
 - Assuming the network works, or that it fails quickly
 - Auto-updates that can leave the app unable to start
+- API keys or shared secrets shipped inside the app
+- Debug menus or logging left on in release builds
 
 ## Review checks
 
@@ -47,3 +59,6 @@ An **atomic save** writes a temporary file, then swaps it into place, so a crash
 - Are updates signed, and can they recover from failure?
 - If your company vanished, could users still get their data?
 - For a CLI, is the output safe for scripts to depend on?
+- Does the app treat every file, argument and link it opens as untrusted?
+- Where are credentials stored, and who else on the device can read them?
+- Can a user send a useful diagnostic report without exposing personal data?

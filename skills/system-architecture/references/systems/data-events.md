@@ -1,6 +1,6 @@
 # Data and event systems
 
-Source: *Designing Data-Intensive Applications* by Martin Kleppmann, [Enterprise Integration Patterns](https://www.enterpriseintegrationpatterns.com/) and the [AWS Well-Architected Framework](https://aws.amazon.com/architecture/well-architected/).
+Source: *Designing Data-Intensive Applications* by Martin Kleppmann, [Enterprise Integration Patterns](https://www.enterpriseintegrationpatterns.com/) the [AWS Well-Architected Framework](https://aws.amazon.com/architecture/well-architected/) and the [OWASP Top 10 CI/CD Security Risks](https://owasp.org/www-project-top-10-ci-cd-security-risks/).
 
 **What's different:** data moves through stages over time, so the hard problems are lost, duplicated, late or out-of-order data, and the ability to reprocess it.
 
@@ -21,9 +21,19 @@ Source: *Designing Data-Intensive Applications* by Martin Kleppmann, [Enterprise
 
 Most brokers deliver **at least once**, so a message can arrive twice. "Exactly once" usually holds only inside one system. Design consumers to be idempotent, for example by using a unique event ID and ignoring repeats.
 
+## Security and lifecycle
+
+Apply [security.md](../security.md). For this type:
+
+- **Threats:** poisoned or forged input, jobs with broad credentials, sensitive data copied into less protected stores, and unauthorized access to brokers or buckets
+- **Maintenance:** schema changes that old and new consumers can both read, and upgrades that can pause and resume without losing data
+- **Diagnostics:** run history, record counts, data quality checks and lineage. Keep sensitive values out of logs and dead-letter queues. Reprocess through the pipeline, and don't hand-edit production data
+- **Developer mode:** small fake or properly anonymized datasets, with separate credentials and no write access to production stores
+
 ## Hard to reverse
 
 - Event and file schemas, once consumers depend on them
+- Which stores hold sensitive data, because every copy has to be protected and deleted
 - Keys used for partitioning and ordering
 - Whether raw input is retained, because lost data can't be reprocessed
 - Retention periods, and any legal duty to delete personal data
@@ -37,6 +47,8 @@ Most brokers deliver **at least once**, so a message can arrive twice. "Exactly 
 - Schema changes that silently break downstream consumers
 - Jobs that succeed with empty or partial input, because nothing checks the data
 - No record of where a number came from
+- One shared credential with access to every source and destination
+- Production data copied into test environments
 
 ## Review checks
 
@@ -47,3 +59,6 @@ Most brokers deliver **at least once**, so a message can arrive twice. "Exactly 
 - Who's told when a schema changes?
 - How do you find out that data stopped arriving?
 - Is personal data retained only as long as allowed?
+- Does each job have only the access it needs?
+- Is input from outside validated before it's trusted?
+- Can a failed run be diagnosed from run history and logs alone?

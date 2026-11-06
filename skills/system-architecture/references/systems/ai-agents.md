@@ -1,6 +1,6 @@
 # AI and agent systems
 
-Source: [Building Effective Agents](https://www.anthropic.com/engineering/building-effective-agents) and the [OWASP Top 10 for LLM Applications](https://genai.owasp.org/llm-top-10/).
+Source: [Building Effective Agents](https://www.anthropic.com/engineering/building-effective-agents) the [OWASP Top 10 for LLM Applications](https://genai.owasp.org/llm-top-10/), the [OWASP Top 10 for Agentic Applications](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/) and the [NIST AI RMF](https://www.nist.gov/itl/ai-risk-management-framework).
 
 **What's different:** the same input can give different outputs, each call costs money and time, and text the model reads can act like instructions. Traditional tests can't fully show that it works, so evaluation is part of the architecture.
 
@@ -18,6 +18,17 @@ Source: [Building Effective Agents](https://www.anthropic.com/engineering/buildi
 | Repeated requests or prompts drive up cost | Prompt or response caching | Stale answers, if responses are cached |
 
 Use the first row that solves the problem, and try plain code first when the task doesn't need a model.
+
+## Security and lifecycle
+
+Apply [security.md](../security.md). For this type:
+
+- **Threats:** prompt injection, leaked data or system prompts, tools with too much power, unsafe use of model output, poisoned retrieval content, compromised models or tool servers, and runaway cost
+- **Maintenance:** pin model versions where you can, rerun the evaluation set before any model or prompt change, and plan for provider deprecations
+- **Diagnostics:** traces of each call, tool use and cost, tied to the prompt and model version. Redact personal data and secrets before storing prompts and responses
+- **Developer mode:** recorded or mock model responses and sandboxed tools, with separate, low-limit API keys and fake data
+
+Limit what an agent can do in code, with scoped credentials and tool allowlists, because a prompt can't enforce a boundary.
 
 ## Hard to reverse
 
@@ -45,3 +56,6 @@ Use the first row that solves the problem, and try plain code first when the tas
 - Which actions need human approval?
 - Can you trace why the system produced a given result?
 - Does retrieval respect each user's permissions?
+- Does each tool run with the least access it needs, using the user's rights and not a shared admin account?
+- Are prompts and responses redacted before they're stored?
+- What's the plan when a model version is retired?

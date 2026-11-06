@@ -12,8 +12,9 @@ Work out the shape from these questions:
 
 These apply everywhere:
 
-- Each addition needs a stated requirement.
+- Each addition needs a stated requirement, or for a security component, a named threat or applicable control.
 - Check what happens when each part fails, slows down or runs twice.
-- Mark where untrusted data enters.
+- Mark where untrusted data enters, and apply [security.md](../security.md), including the threat model and lifecycle minimums. Those minimums still apply if the type has no standard of its own.
+- Work out how it's upgraded after release, how faults are diagnosed from logs and telemetry alone, and how developer mode stays out of production.
 - Count the whole cost, including who runs it.
 - If a system combines types, read each matching guide.

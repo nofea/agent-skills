@@ -25,9 +25,12 @@ Choose from these, along with anything the type guide raises. Ask only what woul
 | Wrong results | How bad is a wrong answer or action? Which actions need a person's approval? | Sets validation and human checks |
 | Environment | Where does it physically run, and who can reach it? | Limits hardware, power and maintenance |
 | Sensitivity | Does it hold personal, payment, health or secret data? | Sets the security and legal duties |
+| Threats | Who might want to misuse it, and what's the worst they could do? | Shapes the threat model |
+| Market | Which sector is it for, and in which countries will it be sold? | Decides which standards and rules apply |
 | People | Who builds and runs it? Who's on call at 3am? | Limits how much the team can operate |
 | Budget | What's acceptable per month, or per unit? | Rules options in or out |
 | Lifetime | Is this a prototype, or will it run for years? | Sets how much care to take |
+| Maintenance | Who upgrades it after release, and for how long? | Sets the update, patching and support plan |
 | Constraints | What's already decided: vendors, platforms, regulations? | Removes options up front |
 
 ## Estimation
@@ -62,11 +65,14 @@ Every part fails eventually. For each one, ask:
 
 ## Security
 
+[security.md](security.md) holds the full rules: standards lookup, threat model, baseline, core controls, waivers and lifecycle minimums. In short:
+
 - **Trust boundaries:** mark where data crosses from less trusted to more trusted. Validate it there.
 - **Least privilege:** give each part only the access it needs.
 - **Data:** encrypt it in transit and at rest. Collect and keep as little sensitive data as possible.
 - **Secrets:** keep them out of code and images.
 - **Identity:** use an established authentication provider or library. Never design your own cryptography.
+- **Lifecycle:** plan for upgrades, diagnosis from logs and telemetry alone, and a developer mode that can't reach production.
 
 ## Cost
 
@@ -82,18 +88,27 @@ Every part fails eventually. For each one, ask:
 - **Availability:** the share of time a system works.
 - **Background job:** work done outside a user's request.
 - **Cache:** a fast copy of data, which adds the risk of serving stale data.
+- **CISA:** the US Cybersecurity and Infrastructure Security Agency.
 - **Component:** a separately running or deployed part of a system.
 - **Consistency:** whether every reader sees the latest data. "Eventual" means they will, after a delay.
+- **CWE:** Common Weakness Enumeration, a catalogue of software security weaknesses.
 - **Deployable:** one unit you release on its own.
+- **HSM:** hardware security module, a device that stores keys and uses them without exposing them.
 - **Idempotent:** safe to run twice, with the same result as running once.
 - **Latency:** how long one operation takes.
 - **Load balancer:** a component that spreads requests across several servers.
 - **Managed service:** one a provider runs for you, including updates and backups.
 - **Monolith:** one deployable that holds the whole application.
+- **OWASP:** the Open Worldwide Application Security Project, which publishes free security guidance.
 - **Microservices:** many small deployables that talk over a network.
 - **Queue:** a component that holds messages until a worker can process them.
 - **Relational database:** one that stores data in linked tables, such as PostgreSQL.
 - **Replica:** a copy of a database or service, for reliability or read capacity.
+- **SBOM:** software bill of materials, a list of what a release contains.
+- **SIEM:** security information and event management, a system that collects and analyses security logs.
 - **Single point of failure:** one part that takes the whole system down when it fails.
 - **Stateless:** keeps nothing on its own machine that you'd miss if it were replaced.
+- **Threat model:** a list of what's worth protecting, who could harm it, how, and what stops them.
 - **Throughput:** how many operations a system handles per second.
+- **Trust boundary:** a point where data or control passes from less trusted to more trusted.
+- **WAF:** web application firewall, a filter in front of a web app that blocks common attacks.
