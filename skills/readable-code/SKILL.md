@@ -1,6 +1,6 @@
 ---
 name: readable-code
-description: Writes clean, human-readable code in any programming language. It uses Allman braces in C, C++, C#, Java, PHP and Swift, puts a blank line around logic blocks such as if/else, loops, switch and try/catch, and follows each language's core guidelines. Use whenever writing, editing or implementing code, including new features, bug fixes and requested refactors. Not for code review, or for reformatting code the task doesn't touch.
+description: Writes clean, human-readable code in any programming language. It uses Allman braces in C, C++, C#, Java, PHP and Swift, puts a blank line around logic blocks such as if/else, loops, switch and try/catch, adds a Doxygen-style doc comment to every function and type, keeps inline comments to logic the code can't explain alone, and follows each language's core guidelines. Use whenever writing, editing or implementing code, including new features, bug fixes and requested refactors. Not for code review, or for reformatting code the task doesn't touch.
 ---
 
 # readable-code
@@ -16,14 +16,14 @@ When rules conflict, the first match in this list wins:
 3. **House rules.** Everything in this file.
 4. **Language guidelines.** The language reference files, which never override house rules on layout.
 
-A style is **enforced** when a formatter config, linter config, CI job or pre-commit hook sets it. Examples are `.clang-format`, `.prettierrc`, `eslint.config.*`, `.php-cs-fixer*`, `.swiftformat`, and Spotless or Checkstyle setup. An `.editorconfig` counts only if it sets brace style. Indent settings alone don't count.
+A style is **enforced** when a formatter config, linter config, CI job or pre-commit hook sets it. Examples are `.clang-format`, `.prettierrc`, `eslint.config.*`, `.php-cs-fixer*`, `.swiftformat`, Spotless or Checkstyle setup, and doc comment lint rules such as `pydocstyle` or ruff's `D` rules. An `.editorconfig` counts only if it sets brace style. Indent settings alone don't count.
 
 ## Steps
 
 1. Look for enforced style config in the repo.
 2. Read the reference for each language you're writing, from the table below.
-3. Write the code using the rules below.
-4. If the repo has a formatter, run it on the files you changed only.
+3. Write the code using the rules below, including a doc comment on each function and type you write or change.
+4. If the repo has a formatter, run it on the files you changed only. If it has `make docs-check`, run that too.
 5. Tell the user about any house rule that a repo config overrode.
 
 ## Allman braces
@@ -88,6 +88,47 @@ def process(count):
     return total
 ```
 
+## Comments and documentation
+
+Doc comments and inline comments follow separate rules. Doc comments are required. Inline comments are the exception.
+
+### Doc comments
+
+**Add a doc comment to every named function and method, and to every class, struct, interface and enum.** That includes private functions, constructors, overrides and one-line getters. Anonymous lambdas, closures and test functions don't need one.
+
+Each function's doc comment covers all of these, even when they look obvious:
+
+- a one-line brief
+- every parameter
+- the return value, unless the function returns nothing
+- every error it deliberately throws
+
+Put the doc comment directly before the definition, with these exceptions:
+
+- **Python:** the docstring goes first inside the function.
+- **C and C++:** document a function declared in a header at that declaration, not at its definition.
+
+Use the format from the language reference. C and C++ use Doxygen tags, Java, C#, PHP and Python use a native form that Doxygen also reads, and every other language uses its own doc format.
+
+Files need a doc comment too in the languages where Doxygen skips global functions without one: `@file` in C, C++ and PHP, and a module docstring in Python.
+
+```cpp
+/**
+ * @brief Applies a percentage discount to an order total.
+ * @param total Order total in cents.
+ * @param percent Discount from 0 to 100.
+ * @return The discounted total in cents.
+ * @throws std::invalid_argument If percent is out of range.
+ */
+int ApplyDiscount(int total, int percent);
+```
+
+### Inline comments
+
+**Add an inline comment only where the logic is complex, or where reading the code isn't enough to understand it.** Explain why the code does something, not what it does. Good reasons are a non-obvious algorithm, a workaround and what it works around, or a constraint from outside the code.
+
+Don't restate the code, label sections or leave commented-out code. If a clearer name would remove the need for a comment, rename instead.
+
 ## Files with a different style
 
 These cases apply when no style is enforced:
@@ -96,6 +137,7 @@ These cases apply when no style is enforced:
 - **Rewriting over half of a function:** convert the whole function.
 - **Smaller edits:** match the enclosing function, so no function has two styles.
 - **Lines you aren't changing:** leave them alone.
+- **Doc comments:** add them to the functions you write or change. Leave other functions undocumented.
 
 ## Language guidelines
 

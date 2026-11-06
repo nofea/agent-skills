@@ -10,5 +10,8 @@ These apply everywhere:
 - Keep functions short, with one job.
 - Handle errors explicitly.
 - Prefer early returns to deep nesting.
-- Write comments that explain why, not what.
 - Use the language's standard idioms over ones borrowed from elsewhere.
+
+## Doc comments
+
+Use the language's standard doc comment format, covering the content the house rules require. If the language has none but Doxygen supports it, use Doxygen tags.

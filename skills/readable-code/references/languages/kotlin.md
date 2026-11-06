@@ -11,3 +11,19 @@ Source: [Kotlin coding conventions](https://kotlinlang.org/docs/coding-conventio
 - **Expressions:** use `when`, and expression bodies for short functions.
 - **Coroutines:** use structured concurrency, and don't use `GlobalScope`.
 - **Errors:** use exceptions for failures, and nullable or sealed results for expected absence.
+
+## Doc comments
+
+Doxygen can't read Kotlin, so use KDoc, with `@param`, `@return` and `@throws`.
+
+```kotlin
+/**
+ * Applies a percentage discount to an order total.
+ *
+ * @param total order total in cents
+ * @param percent discount from 0 to 100
+ * @return the discounted total in cents
+ * @throws IllegalArgumentException if percent is out of range
+ */
+fun applyDiscount(total: Int, percent: Int): Int {
+```

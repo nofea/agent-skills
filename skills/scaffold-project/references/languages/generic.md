@@ -23,3 +23,9 @@ Use this for languages without a curated reference (Ruby, PHP, Elixir, Swift, Da
 - Pin the language version the way the ecosystem does (`.ruby-version`, `composer.json` `require.php`, `.tool-versions`, `Package.swift` tools version).
 - Write the toolchain, with install links, into CONTRIBUTING.md's Prerequisites. `doctor.sh generic` can't check it, so add `need <tool> <tool> --version` lines for the toolchain to the generated project's copy of `scripts/doctor.sh`.
 - Tell the user, in the hand-off, which tool choices you made and that this language isn't one of the curated ones.
+
+## Doxygen
+
+Doxygen also reads PHP, Objective-C, Fortran, D and IDL. For these, set up the doc comment check as `SKILL.md` describes, with the language's source folder as `{{doxygen_input}}` and its extensions as `{{doxygen_file_patterns}}`. For PHP, use `*.php` and set `{{docs_check_args}}` to `--require-file-doc <source folder>`. Only PHP's setup has been tested, so run `make docs-check` on one undocumented function first to confirm it fails.
+
+Skip this for any other language.

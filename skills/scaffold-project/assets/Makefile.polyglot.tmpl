@@ -33,4 +33,16 @@ security-sast: ## Static analysis (semgrep)
 security-fs: ## Vulnerability + misconfiguration scan of the filesystem (trivy)
 	trivy fs --scanners vuln,misconfig --severity HIGH,CRITICAL --exit-code 1 --quiet .
 
-check: lint build test security ## Everything CI runs
+# >>> docs (with no Doxygen components, remove this block and `docs-check` from `check`)
+DOCS_COMPONENTS := {{docs_components}}
+
+.PHONY: docs docs-check
+
+docs: ## Build API docs in every Doxygen component
+	@for c in $(DOCS_COMPONENTS); do echo "==> $$c: docs"; $(MAKE) -C $$c docs; done
+
+docs-check: ## Fail on undocumented functions and types in every Doxygen component
+	@for c in $(DOCS_COMPONENTS); do echo "==> $$c: docs-check"; $(MAKE) -C $$c docs-check; done
+# <<< docs
+
+check: lint docs-check build test security ## Everything CI runs

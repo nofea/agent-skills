@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Check that the tools a scaffolded project needs are installed.
-# Usage: doctor.sh [python] [typescript] [go] [rust] [java-kotlin] [csharp] [cpp] [generic]
+# Usage: doctor.sh [python] [typescript] [go] [rust] [java-kotlin] [csharp] [cpp] [generic] [doxygen]
 # Exits 1 if any required tool is missing. Optional tools are only reported.
 # The scaffold-project skill copies this script into generated projects as scripts/doctor.sh.
 set -uo pipefail
@@ -69,6 +69,8 @@ for lang in "$@"; do
       need clang-format clang-format --version
       need clang-tidy clang-tidy --version
       need osv-scanner osv-scanner --version ;;
+    doxygen)
+      need doxygen doxygen --version ;;
     generic)
       echo "  (check the toolchain listed in CONTRIBUTING.md by hand)" ;;
     *)

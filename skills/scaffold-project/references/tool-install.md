@@ -27,6 +27,7 @@ Use the newest LTS or stable version available. Write the version into the proje
 | gitleaks | `brew install gitleaks` | release binary from github.com/gitleaks/gitleaks/releases into `~/.local/bin` | `go install github.com/zricethezav/gitleaks/v8@latest` |
 | semgrep | `brew install semgrep` | `pipx install semgrep` or `uv tool install semgrep` | — |
 | trivy | `brew install trivy` | `sudo dnf install trivy` / apt repo from trivy.dev docs / install script `curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \| sh -s -- -b ~/.local/bin` | — |
+| doxygen | `brew install doxygen` | `sudo apt-get install doxygen` / `sudo dnf install doxygen` | release binary from doxygen.nl |
 | osv-scanner (C/C++) | `brew install osv-scanner` | release binary | `go install github.com/google/osv-scanner/v2/cmd/osv-scanner@latest` |
 
 ## Language-specific extras

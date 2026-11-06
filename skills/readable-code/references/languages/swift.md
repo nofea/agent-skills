@@ -11,3 +11,17 @@ Source: [Swift API Design Guidelines](https://www.swift.org/documentation/api-de
 - **Access:** use the narrowest access level that works.
 - **Concurrency:** use `async`/`await` and actors over manual locks.
 - **Closures:** a single-line closure may stay on one line.
+
+## Doc comments
+
+Doxygen can't read Swift, so use `///` markup, with `- Parameter`, `- Returns` and `- Throws`.
+
+```swift
+/// Applies a percentage discount to an order total.
+///
+/// - Parameter total: Order total in cents.
+/// - Parameter percent: Discount from 0 to 100.
+/// - Returns: The discounted total in cents.
+/// - Throws: `DiscountError` if percent is out of range.
+func applyDiscount(total: Int, percent: Int) throws -> Int
+```

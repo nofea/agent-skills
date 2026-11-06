@@ -65,7 +65,18 @@ With `TreatWarningsAsErrors`, NuGet audit warnings (NU1901–NU1904) fail the re
 
 ## .gitignore
 
-`dotnet new gitignore` output, plus `.env`.
+`dotnet new gitignore` output, plus `.env` and `docs/api/`.
+
+## Doxygen
+
+| Placeholder | Value |
+| --- | --- |
+| `{{doxygen_input}}` | `src` |
+| `{{doxygen_file_patterns}}` | `*.cs` |
+| `{{doxygen_exclude_patterns}}` | `*/bin/* */obj/*` |
+| `{{docs_check_args}}` | empty |
+
+The `obj` exclusion matters, because the build writes generated `.cs` files there.
 
 ## Pre-commit local hook
 

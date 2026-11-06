@@ -11,3 +11,25 @@ Source: [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/) and [
 - **Traits:** derive common traits such as `Debug`, `Clone` and `PartialEq` where they make sense.
 - **Iterators:** prefer them when they read more clearly than index loops.
 - **Unsafe:** keep `unsafe` minimal, and add a `// SAFETY:` comment to each block.
+
+## Doc comments
+
+Doxygen can't read Rust, so use rustdoc `///` comments, with `# Arguments`, `# Returns` and `# Errors` sections. Add `# Panics` if the function can panic.
+
+```rust
+/// Applies a percentage discount to an order total.
+///
+/// # Arguments
+///
+/// * `total` - Order total in cents.
+/// * `percent` - Discount from 0 to 100.
+///
+/// # Returns
+///
+/// The discounted total in cents.
+///
+/// # Errors
+///
+/// Returns `DiscountError` if `percent` is out of range.
+pub fn apply_discount(total: u32, percent: u32) -> Result<u32, DiscountError> {
+```

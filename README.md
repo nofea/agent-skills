@@ -34,6 +34,7 @@ What a scaffolded project gets:
 - **Language-appropriate layout:** folders and tool config for Python, TypeScript/Node, Go, Rust, Java/Kotlin, C#/.NET or C/C++, with a generic fallback for anything else. Projects can be a CLI, library, web service/API or web app.
 - **Allman braces:** generated formatter configs use Allman in C, C++, C#, Java, PHP and Swift. Other languages keep their standard style.
 - **Makefile:** the same verbs in every language: `build`, `lint`, `fmt`, `test`, `security`, `check` and `doctor`.
+- **Doc comment check:** `make docs` builds API docs and `make docs-check` fails on undocumented functions and types, using Doxygen. It covers Python, Java, C#, C/C++ and PHP, among others, but not Go, Rust, TypeScript or Kotlin. In existing repos it only reports until you turn it on.
 - **Automation:** pre-commit hooks, GitHub Actions CI and Dependabot.
 - **Security scanning:** gitleaks, semgrep, trivy and a dependency audit.
 - **Docs:** `README.md` for users, `CONTRIBUTING.md` for developers, plus `SECURITY.md`, `LICENSE`, `.editorconfig` and `.gitignore`.
@@ -60,6 +61,8 @@ The rules:
 
 - **Allman braces** in C, C++, C#, Java, PHP and Swift, with braces on every block. Other languages keep their standard style, because their formatters can't do Allman or, in Go, it doesn't compile.
 - **Blank lines** around `if`/`else`, loops, `switch`/`match`, `try`/`catch` and similar blocks, in every language.
+- **Doc comments** on every named function and type, in a Doxygen-style format or the language's own where Doxygen can't read it.
+- **Inline comments** only where the logic is complex or the code can't explain itself.
 - **Core guidelines** for each language, such as the C++ Core Guidelines, PEP 8 and Effective Go. The agent reads only the ones it needs.
 
 If a repo enforces its own style through a formatter, linter or CI check, that style wins and the agent tells you. Otherwise, new code uses these rules and small edits match the function around them. Unchanged code is left alone. The skill includes sample formatter configs, which are added to a repo only if you ask.
