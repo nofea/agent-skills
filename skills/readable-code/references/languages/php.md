@@ -10,3 +10,19 @@ Source: [PER Coding Style](https://www.php-fig.org/per/coding-style/) (which ext
 - **Comparison:** use `===` and `!==`.
 - **Errors:** use exceptions, not error codes, and never use `@` to hide errors.
 - **Security:** use prepared statements for SQL and escape output for its context.
+
+## Doc comments
+
+Use PHPDoc, with `@param`, `@return` and `@throws`. Doxygen reads it as is. Add a bare `@file` comment at the top of each file, because Doxygen skips undocumented global functions in a file without one.
+
+```php
+/**
+ * Applies a percentage discount to an order total.
+ *
+ * @param int $total Order total in cents.
+ * @param int $percent Discount from 0 to 100.
+ * @return int The discounted total in cents.
+ * @throws InvalidArgumentException If percent is out of range.
+ */
+function applyDiscount(int $total, int $percent): int
+```

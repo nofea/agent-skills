@@ -43,7 +43,9 @@ One job per component, or a single `check` job for single-language repos:
       - uses: actions/checkout@<sha> # vX
       # language setup steps from references/languages/<lang>.md
       - run: make setup
+      - run: sudo apt-get update && sudo apt-get install -y doxygen   # Doxygen languages only
       - run: make lint
+      - run: make docs-check                                          # Doxygen languages only
       - run: make build
       - run: make test
       - run: make security-deps

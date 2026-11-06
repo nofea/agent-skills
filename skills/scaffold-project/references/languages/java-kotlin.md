@@ -66,7 +66,18 @@ Java formatting uses Allman braces, which google-java-format can't produce. Copy
 
 ## .gitignore
 
-`.gradle/ build/ out/ .kotlin/ *.class .idea/ *.iml .env`. **Commit** `gradle/wrapper/gradle-wrapper.jar`.
+`.gradle/ build/ out/ .kotlin/ *.class .idea/ *.iml docs/api/ .env`. **Commit** `gradle/wrapper/gradle-wrapper.jar`.
+
+## Doxygen
+
+| Placeholder | Value |
+| --- | --- |
+| `{{doxygen_input}}` | `app/src/main/java` (or `lib/src/main/java`) |
+| `{{doxygen_file_patterns}}` | `*.java` |
+| `{{doxygen_exclude_patterns}}` | `*/build/*` |
+| `{{docs_check_args}}` | empty |
+
+Java only. Doxygen can't read Kotlin, so a Kotlin project skips this section and a mixed project checks only its Java code.
 
 ## Pre-commit local hook
 

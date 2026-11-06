@@ -12,3 +12,19 @@ Source: the [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/)
 - **Async:** use `async`/`await` and handle every promise.
 - **Errors:** throw `Error` objects, and treat caught values as `unknown`.
 - **Modules:** use ES modules and named exports.
+
+## Doc comments
+
+Doxygen can't read TypeScript or modern JavaScript, so use TSDoc, with `@param`, `@returns` and `@throws`.
+
+```typescript
+/**
+ * Applies a percentage discount to an order total.
+ *
+ * @param total - Order total in cents.
+ * @param percent - Discount from 0 to 100.
+ * @returns The discounted total in cents.
+ * @throws RangeError if percent is out of range.
+ */
+function applyDiscount(total: number, percent: number): number {
+```

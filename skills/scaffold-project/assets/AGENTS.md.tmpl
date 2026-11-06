@@ -17,6 +17,8 @@ Always use the Makefile. It is what CI runs.
 | `make lint` | Format check, linters, type checks |
 | `make test` | Run tests |
 | `make security` | Secrets (gitleaks), SAST (semgrep), dependency audit, filesystem scan (trivy) |
+| `make docs` | Build API docs into `docs/api` |
+| `make docs-check` | Fail on undocumented functions and types |
 | `make check` | Everything above. **Must pass before you say a task is done.** |
 
 {{component_commands}}
@@ -41,6 +43,7 @@ Always use the Makefile. It is what CI runs.
 
 {{conventions}}
 
+- Every named function and type gets a doc comment. Add inline comments only where the code can't explain itself.
 - Don't add a dependency without saying why. Prefer the standard library.
 - Never commit secrets. Configuration comes from environment variables; document new ones in `.env.example` (if present) and in README.md.
 - Keep README.md (for users) and CONTRIBUTING.md (for developers) accurate when you change behaviour, commands or setup.

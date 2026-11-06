@@ -47,7 +47,17 @@ security-fs: ## Vulnerability + misconfiguration scan of the filesystem (trivy)
 	trivy fs --scanners vuln,misconfig --severity HIGH,CRITICAL --exit-code 1 --quiet .
 # <<< repo-wide
 
-check: lint build test security ## Everything CI runs
+# >>> docs (for languages without Doxygen support, remove this block and `docs-check` from `check`)
+.PHONY: docs docs-check
+
+docs: ## Build API docs into docs/api (doxygen)
+	doxygen Doxyfile
+
+docs-check: ## Fail on undocumented functions and types
+	@bash scripts/docs-check.sh {{docs_check_args}}
+# <<< docs
+
+check: lint docs-check build test security ## Everything CI runs
 
 clean: ## Remove build artifacts
 {{clean_recipe}}

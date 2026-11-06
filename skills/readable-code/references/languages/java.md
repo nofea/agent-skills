@@ -12,3 +12,19 @@ Source: *Effective Java* (Joshua Bloch) and the naming and programming rules in 
 - **Resources:** use try-with-resources.
 - **Generics:** avoid raw types.
 - **Overrides:** use `@Override`, and implement `hashCode` whenever you implement `equals`.
+
+## Doc comments
+
+Use Javadoc, with a first sentence as the brief, then `@param`, `@return` and `@throws`. Doxygen reads it as is.
+
+```java
+/**
+ * Applies a percentage discount to an order total.
+ *
+ * @param total order total in cents
+ * @param percent discount from 0 to 100
+ * @return the discounted total in cents
+ * @throws IllegalArgumentException if percent is out of range
+ */
+public int applyDiscount(int total, int percent)
+```

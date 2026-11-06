@@ -63,7 +63,18 @@ Each recipe goes tab-indented under its target. Join multi-step recipes with `&&
 
 ## .gitignore
 
-`.venv/ __pycache__/ *.py[cod] dist/ build/ *.egg-info/ .mypy_cache/ .ruff_cache/ .pytest_cache/ .coverage htmlcov/ .env`
+`.venv/ __pycache__/ *.py[cod] dist/ build/ *.egg-info/ .mypy_cache/ .ruff_cache/ .pytest_cache/ .coverage htmlcov/ docs/api/ .env`
+
+## Doxygen
+
+| Placeholder | Value |
+| --- | --- |
+| `{{doxygen_input}}` | `src` |
+| `{{doxygen_file_patterns}}` | `*.py` |
+| `{{doxygen_exclude_patterns}}` | `*/__pycache__/*` |
+| `{{docs_check_args}}` | `--require-file-doc src` |
+
+Docstrings must start with `"""!` and use `@brief`, `@param`, `@return` and `@throws`, or the check can't read the tags. Each module needs a docstring. Functions annotated `-> None` need `@return None.`, except `__init__`, which must have no `@return`.
 
 ## Pre-commit local hook
 

@@ -30,6 +30,12 @@ Use this when the repo has more than one component in different languages, or mo
 
 `{{components}}` lists each component directory, separated by spaces, in dependency order (packages first). The root runs per-component targets in a loop and runs the repo-wide scans once.
 
+## Doxygen
+
+Each component in a Doxygen language has its own `Doxyfile`, set up as `SKILL.md` describes. List those components in `{{docs_components}}`. Components in other languages stay out of it, and their Makefiles lose the `docs` block.
+
+`docs-check.sh` lives once at the root, so in component Makefiles write its path relative to the component, such as `@bash ../../scripts/docs-check.sh`. If no component uses Doxygen, remove the `docs` block and `docs-check` from the root Makefile too.
+
 ## Agent docs
 
 - Root `AGENTS.md`: the full template. The `{{component_commands}}` section explains that `make -C apps/<name> <verb>` runs a target for one component.

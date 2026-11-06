@@ -18,6 +18,7 @@ Collect these facts before asking the user anything:
   | CI | `.github/workflows/*`, `.gitlab-ci.yml`, others |
   | Security | gitleaks/trufflehog, semgrep/CodeQL, trivy/snyk, dependabot/renovate |
   | Docs | README, CONTRIBUTING, SECURITY, LICENSE, `docs/` |
+  | API docs | `Doxyfile`, Sphinx, TypeDoc, Dokka, doc comment lint rules |
   | Agent docs | AGENTS.md, CLAUDE.md, `.cursor/rules`, `.github/copilot-instructions.md` |
   | Specs | `specs/`, `docs/adr`, `.specify/`, RFCs |
 
@@ -39,7 +40,16 @@ For each concern, choose one action:
 | Existing CLAUDE.md, no AGENTS.md | Propose moving its content into AGENTS.md and making CLAUDE.md `@AGENTS.md`. **Ask first**, because it rewrites their file |
 | Existing AGENTS.md | **modify**: add the missing sections (commands, spec workflow). Keep their wording |
 | Existing README | **modify** only by adding missing sections (Development link, Security, License). Never rewrite their prose. If dev setup is mixed into README, offer to move it into CONTRIBUTING.md |
+| No API docs tool, Doxygen language | **create** `Doxyfile` and the `docs` Makefile block, with `--report-only` in `{{docs_check_args}}`. See below |
+| Existing `Doxyfile` | **keep**. Add `docs-check` using it, also with `--report-only`. Don't change their settings. If it sets `EXTRACT_ALL = YES` or `WARN_AS_ERROR`, tell the user the check won't behave as described |
+| Another API docs tool (Sphinx, TypeDoc) | **keep** it as `docs`. Ask before adding `docs-check`, since it would add Doxygen alongside their tool |
 | Other agent rule files | Leave them alone. Mention that AGENTS.md could become the single source |
+
+### Doc comment check
+
+Existing code usually fails `make docs-check` straight away, so start it report-only. It then prints every problem but exits 0, which keeps CI green. To enforce the check, the user removes `--report-only` from the `docs-check` line in the Makefile. Tell them this in the hand-off, along with the current number of problems.
+
+Check that `INPUT` and `EXCLUDE_PATTERNS` fit the repo's layout, including generated code and vendored folders. Report what the check finds, and don't add doc comments to existing code unless the user asks.
 
 ## 3. Change plan (must be approved)
 
@@ -51,6 +61,7 @@ CREATE  .github/workflows/security.yml        (existing ci.yml kept; security ad
 MODIFY  Makefile                              + security, security-*, check, doctor (existing targets untouched)
 MODIFY  .pre-commit-config.yaml               + gitleaks hook
 MODIFY  README.md                             + "Development" and "Security" sections
+CREATE  Doxyfile, scripts/docs-check.sh       (report-only until you remove --report-only)
 SKIP    .editorconfig                         (exists)
 KEEP    black + flake8 + mypy                 (wired into `make lint`)
 ```

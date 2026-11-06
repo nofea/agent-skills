@@ -10,3 +10,13 @@ Source: [Effective Go](https://go.dev/doc/effective_go) and [Go Code Review Comm
 - **Concurrency:** pass `context.Context` as the first parameter, and make sure every goroutine can stop.
 - **Cleanup:** use `defer`.
 - **Control flow:** handle errors first and return early, keeping the normal path unindented.
+
+## Doc comments
+
+Doxygen can't read Go, so use GoDoc comments. Start with the function's name, and cover parameters, the return value and errors in prose. There are no tags.
+
+```go
+// ApplyDiscount returns total, in cents, reduced by percent, which must be from 0 to 100.
+// It returns an error if percent is out of range.
+func ApplyDiscount(total, percent int) (int, error) {
+```

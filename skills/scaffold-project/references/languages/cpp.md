@@ -81,7 +81,18 @@ Define `SRC := $(shell find src include tests -name '*.[ch]' -o -name '*.[ch]pp'
 
 ## .gitignore
 
-`build/ .cache/ compile_commands.json .env`
+`build/ .cache/ compile_commands.json docs/api/ .env`
+
+## Doxygen
+
+| Placeholder | Value |
+| --- | --- |
+| `{{doxygen_input}}` | `src include` |
+| `{{doxygen_file_patterns}}` | `*.c *.cc *.cpp *.h *.hpp` |
+| `{{doxygen_exclude_patterns}}` | `*/build/*` |
+| `{{docs_check_args}}` | `--require-file-doc src include` |
+
+Every file needs a `@file` comment, including the entry point.
 
 ## Pre-commit local hook
 

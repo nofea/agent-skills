@@ -13,3 +13,22 @@ Source: [C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCore
 - **Errors:** throw exceptions for errors that can't be handled locally, unless the project bans them. Never ignore a return code.
 - **Naming:** use the project's convention. Otherwise use `snake_case` for functions and variables and `PascalCase` for types. Keep each file's naming consistent.
 - **C:** check every allocation and return value, use one clear cleanup path, and use bounded string functions.
+
+## Doc comments
+
+Use Doxygen `/** */` blocks with `@brief`, `@param`, `@return` and `@throws`. Start each file with a bare `@file` comment, because Doxygen skips undocumented global functions in a file without one.
+
+```cpp
+/**
+ * @file
+ * @brief Order discount calculations.
+ */
+
+/**
+ * @brief Applies a percentage discount to an order total.
+ * @param total Order total in cents.
+ * @param percent Discount from 0 to 100.
+ * @return The discounted total in cents.
+ */
+int ApplyDiscount(int total, int percent);
+```
