@@ -17,9 +17,12 @@ Use this for languages without a curated reference (Ruby, PHP, Elixir, Swift, Da
 
 - PHP: set php-cs-fixer's `braces_position` rule with `control_structures_opening_brace`, `functions_opening_brace` and `classes_opening_brace` all set to `next_line_unless_newline_at_signature_end`, and set `control_structure_continuation_position` to `next_line`, so code uses Allman braces.
 - Swift: use SwiftFormat, with `--allman true` in `.swiftformat`, so code uses Allman braces. Apple's swift-format has no Allman option.
-- Same Makefile verbs: `setup build fmt fmt-check lint test security-deps clean`. `build` can be a no-op with a comment for interpreted languages that have no build step.
+- Same Makefile verbs: `setup build fmt fmt-check lint test release test-release ci-check ci-release security-deps clean`. `build` can be a no-op with a comment for interpreted languages that have no build step.
+- Follow [build-profiles.md](../build-profiles.md). For compiled languages, `release` and `test-release` use the toolchain's release mode, such as `swift build -c release` and `swift test -c release`. Otherwise, `release` builds the package or is a no-op with a comment, and `test-release` is `$(MAKE) test`.
 - `test` must pass when there are no tests yet.
 - Use the language's conventional layout (`lib/` + `spec/`, `src/` + `tests/`, `Sources/` + `Tests/` …). Don't invent one.
+- Add the toolchain to `devenv.nix` through `languages.<name>` if devenv has it, otherwise through `packages`. Check with `devenv search <name>`.
+- Write `ci/Containerfile` from the language's official image, or `docker.io/library/debian:stable-slim` if there is none. It needs `make`, `git`, the toolchain and the audit tool, and sets `HOME` and any cache folders to `/tmp`. End it with `USER 65532:65532`. The Makefile runs it as your own non-root user, under both engines.
 - Pin the language version the way the ecosystem does (`.ruby-version`, `composer.json` `require.php`, `.tool-versions`, `Package.swift` tools version).
 - Write the toolchain, with install links, into CONTRIBUTING.md's Prerequisites. `doctor.sh generic` can't check it, so add `need <tool> <tool> --version` lines for the toolchain to the generated project's copy of `scripts/doctor.sh`.
 - Tell the user, in the hand-off, which tool choices you made and that this language isn't one of the curated ones.

@@ -43,15 +43,26 @@ formatters:
 | `fmt` | `gofmt -w .` |
 | `fmt-check` | `out=$$(gofmt -l .); if [ -n "$$out" ]; then echo "$$out"; exit 1; fi` |
 | `lint` | `go vet ./... && golangci-lint run` |
-| `test` | `go test ./...` (passes with no test files) |
+| `test` | `go test -race ./...` (passes with no test files; `-race` needs cgo and a C compiler) |
+| `release` | `CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o bin/release/<name> ./cmd/<name>` (library: `go build -trimpath ./...`) |
+| `test-release` | `CGO_ENABLED=0 go test -trimpath ./...` |
 | `security-deps` | `govulncheck ./...` |
 | `clean` | `rm -rf bin coverage.out` |
 
 Each recipe goes tab-indented under its target.
 
+## Build profiles
+
+Follow [build-profiles.md](../build-profiles.md).
+
+- Go has one build mode, so the profiles differ by flags only. `make test` adds the race detector, and `make release` uses the flags the Dockerfile uses.
+- `-s -w` removes the symbol table and DWARF data. Panic stack traces still work, so Go has no symbols to retain.
+- Drop `CGO_ENABLED=0` if the project needs cgo. The Dockerfile's final image must then include a C library, so `static-debian12` no longer fits.
+- **Artefacts:** `bin/release/<name>`.
+
 ## .gitignore
 
-`bin/ coverage.out *.test .env`
+`.devenv*/ devenv.local.nix bin/ coverage.out *.test .env`
 
 ## Pre-commit local hook
 
@@ -64,31 +75,40 @@ Each recipe goes tab-indented under its target.
         types: [go]
 ```
 
-## CI setup steps
+## devenv
 
-```yaml
-      - uses: actions/setup-go@<sha> # vX
-        with:
-          go-version-file: go.mod
-      - uses: golangci/golangci-lint-action@<sha> # vX   (installs and runs golangci-lint)
-        with:
-          version: latest
-      - run: go install golang.org/x/vuln/cmd/govulncheck@latest
+`{{devenv_languages}}`:
+```nix
+  languages.go.enable = true;
 ```
 
-`make lint` runs golangci-lint again. That's harmless, or you can leave out the action and install the binary instead. In CI, run `go test -race ./...` as well.
+`{{devenv_packages}}`: `golangci-lint` `govulncheck`
 
-Dependabot ecosystem: `gomod`. Docker ignore extras: `bin coverage.out`.
+## CI container
+
+`ci/Containerfile`:
+```dockerfile
+FROM docker.io/library/golang:1-bookworm      # pin to the go.mod minor, e.g. golang:1.25
+ENV GOBIN=/usr/local/bin
+RUN go install golang.org/x/vuln/cmd/govulncheck@<version> \
+    && go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@<version>
+ENV HOME=/tmp GOPATH=/tmp/go GOCACHE=/tmp/go-build
+USER 65532:65532
+```
+
+Replace each `<version>` with the latest release.
+
+Dependabot ecosystem: `gomod`, and `docker` for `/ci`. Docker ignore extras: `bin coverage.out`.
 
 ## Dockerfile (service)
 
 ```dockerfile
-FROM golang:1-bookworm AS build      # pin to the go.mod minor, e.g. golang:1.25
+FROM docker.io/library/golang:1-bookworm AS build      # pin to the go.mod minor, e.g. golang:1.25
 WORKDIR /src
 COPY go.mod go.sum* ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/server ./cmd/server
+RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/server ./cmd/server   # same flags as `make release`
 
 FROM gcr.io/distroless/static-debian12:nonroot
 COPY --from=build /out/server /server

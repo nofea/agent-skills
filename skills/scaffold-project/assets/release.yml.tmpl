@@ -1,0 +1,100 @@
+name: Release
+
+# Runs only for version tags. Jobs that hold signing or publishing credentials wait
+# in the `release` environment. See SECURITY.md for how to verify a release.
+on:
+  push:
+    tags:
+      - "{{tag_pattern}}"
+
+permissions: {}
+
+env:
+  CONTAINER: docker   # or podman: the Makefile accepts either
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Lint, test and scan
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+
+  build:
+    name: Build
+    needs: verify
+    runs-on: {{build_runner}}
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@{{ref:actions/checkout}}
+        with:
+          persist-credentials: false
+{{release_steps}}
+      - name: Collect artefacts and checksums
+        shell: bash
+        run: |
+          mkdir -p artifacts
+          cp -R {{artifact_paths}} artifacts/
+          cd artifacts
+          find . -type f -print0 | sort -z | xargs -0 shasum -a 256 > ../SHA256SUMS
+          mv ../SHA256SUMS .
+      - uses: actions/upload-artifact@{{ref:actions/upload-artifact}}
+        with:
+          name: release
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 7
+{{symbol_steps}}
+
+  sign:
+    name: Sign
+    needs: build
+    runs-on: {{sign_runner}}
+    environment: release
+    permissions:
+{{sign_permissions}}
+    steps:
+      - uses: actions/download-artifact@{{ref:actions/download-artifact}}
+        with:
+          name: release
+          path: artifacts
+      - name: Verify checksums
+        shell: bash
+        working-directory: artifacts
+        run: shasum -a 256 -c SHA256SUMS
+{{sign_steps}}
+      - name: Refresh checksums
+        shell: bash
+        working-directory: artifacts
+        run: |
+          find . -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 shasum -a 256 > ../SHA256SUMS
+          mv ../SHA256SUMS .
+{{attest_steps}}
+      - uses: actions/upload-artifact@{{ref:actions/upload-artifact}}
+        with:
+          name: signed
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: Publish
+    needs: sign
+    runs-on: {{publish_runner}}
+    environment: release
+    permissions:
+{{publish_permissions}}
+    steps:
+      - uses: actions/download-artifact@{{ref:actions/download-artifact}}
+        with:
+          name: signed
+          path: artifacts
+      - name: Verify checksums
+        shell: bash
+        working-directory: artifacts
+        run: shasum -a 256 -c SHA256SUMS
+{{publish_steps}}

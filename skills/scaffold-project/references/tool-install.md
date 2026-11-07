@@ -2,6 +2,24 @@
 
 Always **ask** before installing. Offer the command for the user's platform, run it only after a yes, and then run `doctor.sh` again. Prefer user-level installs (pipx, `~/.local/bin`, rustup, `go install`) over `sudo`.
 
+## devenv first
+
+The dev environment comes from devenv, so most tools below don't need a separate install. Check for `devenv` and for `podman` or `docker`. Offer only what's missing:
+
+| Tool | Install |
+| --- | --- |
+| Nix, Linux | `sh <(curl -L https://nixos.org/nix/install) --daemon` |
+| Nix, macOS | `curl -sSfL https://artifacts.nixos.org/nix-installer \| sh -s -- install` |
+| Nix, Windows (WSL2) | `sh <(curl -L https://nixos.org/nix/install) --no-daemon` |
+| devenv | `nix profile install nixpkgs#devenv` |
+| podman | `brew install podman`, `sudo apt-get install podman` or `sudo dnf install podman` |
+
+Then `devenv shell` provides everything else. Avoid installing `semgrep` through Nix: the nixpkgs build has failed, so `make security-sast` runs it in a container.
+
+If the user declines devenv, use the tables below and write the toolchain into CONTRIBUTING.md's Prerequisites. Keep `devenv.nix` out of the project only if the user asks.
+
+## Without devenv
+
 Detect the platform with `uname -s`. On Linux, check `/etc/os-release` (`ID`, `ID_LIKE`) and which of `brew`, `apt-get`, `dnf`, `pacman` exists.
 
 ## Toolchains
@@ -29,6 +47,7 @@ Use the newest LTS or stable version available. Write the version into the proje
 | trivy | `brew install trivy` | `sudo dnf install trivy` / apt repo from trivy.dev docs / install script `curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \| sh -s -- -b ~/.local/bin` | — |
 | doxygen | `brew install doxygen` | `sudo apt-get install doxygen` / `sudo dnf install doxygen` | release binary from doxygen.nl |
 | osv-scanner (C/C++) | `brew install osv-scanner` | release binary | `go install github.com/google/osv-scanner/v2/cmd/osv-scanner@latest` |
+| cosign (optional: verifying releases locally) | `brew install cosign` | release binary from github.com/sigstore/cosign/releases | `go install github.com/sigstore/cosign/v2/cmd/cosign@latest` |
 
 ## Language-specific extras
 

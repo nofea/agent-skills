@@ -95,7 +95,8 @@ State each of these. Choosing "none" for any of them is a [waiver](#waivers).
 
 - **Upgrades:** how each deployed part gets upgraded, and who does it
 - **Rollback:** how to recover from a failed upgrade, and how that's tested before release
-- **Integrity:** how an upgrade is authenticated. Anything shipped to machines you don't control must be signed
+- **Integrity:** how an upgrade is authenticated. Anything shipped to machines you don't control must be signed, including through marketplaces. Signing keys stay out of source and build jobs, preferring short-lived OIDC credentials, and every key has a rotation and revocation plan
+- **Release builds:** the configuration that ships is the one that gets tested, with compiler hardening on where the language has it
 - **Patching:** how you learn about vulnerabilities in dependencies and platforms, and how fast you act
 - **Rotation:** how to replace keys, certificates and secrets without a redesign, and what happens when one expires
 - **Support period:** how long the system gets fixes, and what happens to users at the end
@@ -111,7 +112,7 @@ Production and field debugging use **logs and telemetry only**. Fixes ship as no
 - **Design diagnostics in now,** because they can't be added during an incident. Include structured logs, the build version, correlation IDs, health signals and crash reports.
 - **Keep them safe to collect.** Redact secrets and personal data before anything is stored or sent.
 - **Plan for no connection.** Local and offline systems buffer diagnostics or let the user export them. Sending anything off a user's device is opt-in if it could hold personal data.
-- **Reproduce elsewhere.** Keep a way to rebuild any released version, and reproduce faults outside production with fake or redacted data.
+- **Reproduce elsewhere.** Keep a way to rebuild any released version, retain each release's debug symbols, and reproduce faults outside production with fake or redacted data.
 - **Make the fix path fast.** A release must be quick enough to replace hands-on access. Urgent fixes use the same signed, tested path, and data repairs run as reviewed, logged migrations.
 - **Answer requests for hands-on access at the source.** Find what's missing, usually logs or release speed, and fix that. Anything else needs a [waiver](#waivers).
 

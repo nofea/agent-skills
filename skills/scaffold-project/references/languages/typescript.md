@@ -49,6 +49,7 @@ Keep the scripts as the native interface. The Makefile calls them.
 ```json
 "scripts": {
   "build": "tsc -p .",
+  "build:release": "rm -rf dist && tsc -p tsconfig.release.json",
   "fmt": "biome check --write .",
   "fmt:check": "biome format .",
   "lint": "biome lint . && tsc -p . --noEmit",
@@ -64,14 +65,33 @@ Keep the scripts as the native interface. The Makefile calls them.
 | `fmt-check` | `pnpm run fmt:check` |
 | `lint` | `pnpm run lint` |
 | `test` | `pnpm run test` |
+| `release` | `NODE_ENV=production pnpm run build:release` |
+| `test-release` | `$(MAKE) test` (vitest runs the source, and `tsc` has no release-only behaviour) |
 | `security-deps` | `pnpm audit --audit-level high` |
 | `clean` | `rm -rf dist coverage` |
 
 Each recipe goes tab-indented under its target. Join multi-step recipes with `&&`, or put each step on its own line.
 
+## Build profiles
+
+Follow [build-profiles.md](../build-profiles.md).
+
+`tsconfig.release.json`:
+```json
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "sourceMap": false }
+}
+```
+
+- `build:release` deletes `dist/` first, so no source maps are left from an earlier debug build.
+- **Web apps:** point `build:release` at the framework's production build, such as `vite build`. Leave its source map option off, or upload maps only to the error tracker.
+- Don't branch security behaviour on `NODE_ENV`, because it's only an environment variable.
+- **Artefacts:** `dist/`.
+
 ## .gitignore
 
-`node_modules/ dist/ coverage/ *.tsbuildinfo .env`
+`.devenv*/ devenv.local.nix node_modules/ dist/ coverage/ *.tsbuildinfo .env`
 
 ## Pre-commit local hook
 
@@ -84,31 +104,45 @@ Each recipe goes tab-indented under its target. Join multi-step recipes with `&&
         types_or: [ts, tsx, javascript, json]
 ```
 
-## CI setup steps
+## devenv
 
-```yaml
-      - uses: pnpm/action-setup@<sha> # vX   (reads packageManager)
-      - uses: actions/setup-node@<sha> # vX
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
+`{{devenv_languages}}`:
+```nix
+  languages.javascript = {
+    enable = true;
+    pnpm.enable = true;
+  };
+  languages.typescript.enable = true;
 ```
 
-pnpm uses `--frozen-lockfile` automatically when `CI=true`. Dependabot ecosystem: `npm` (it handles pnpm lockfiles). Docker ignore extras: `node_modules dist coverage`.
+## CI container
+
+`ci/Containerfile`:
+```dockerfile
+FROM docker.io/library/node:24-slim
+RUN apt-get update && apt-get install -y --no-install-recommends make git && rm -rf /var/lib/apt/lists/*
+RUN corepack enable
+ENV HOME=/tmp COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+USER 65532:65532
+```
+
+Replace each `<version>` with the latest release.
+
+pnpm uses `--frozen-lockfile` automatically when `CI=true`. Dependabot ecosystem: `npm` (it handles pnpm lockfiles), and `docker` for `/ci`. Docker ignore extras: `node_modules dist coverage`.
 
 ## Dockerfile (service)
 
 ```dockerfile
-FROM node:24-slim AS build
+FROM docker.io/library/node:24-slim AS build
 RUN corepack enable
 WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
-COPY tsconfig.json ./
+COPY tsconfig.json tsconfig.release.json ./
 COPY src ./src
-RUN pnpm run build && pnpm prune --prod
+RUN NODE_ENV=production pnpm run build:release && pnpm prune --prod
 
-FROM node:24-slim
+FROM docker.io/library/node:24-slim
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=build --chown=node /app/node_modules ./node_modules

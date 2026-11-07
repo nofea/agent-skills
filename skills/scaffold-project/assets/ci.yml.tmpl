@@ -4,9 +4,13 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_call:   # release.yml runs these checks first, when it's present
 
 permissions:
   contents: read
+
+env:
+  CONTAINER: docker   # or podman: the Makefile accepts either
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -22,22 +26,6 @@ jobs:
       - uses: actions/checkout@{{ref:actions/checkout}}
         with:
           fetch-depth: 0
-
-      - name: Secrets (gitleaks)
-        run: |
-          docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:{{gitleaks_version}} \
-            git /repo --redact --no-banner
-
-      - name: SAST (semgrep)
-        run: |
-          docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD:/src" -w /src semgrep/semgrep:{{semgrep_version}} \
-            semgrep scan --config p/default --error --metrics=off
-
-      - name: Filesystem scan (trivy)
-        uses: aquasecurity/trivy-action@{{ref:aquasecurity/trivy-action}}
-        with:
-          scan-type: fs
-          scanners: vuln,misconfig
-          severity: HIGH,CRITICAL
-          exit-code: "1"
+          persist-credentials: false
+      - run: make ci-security
 {{image_scan_steps}}

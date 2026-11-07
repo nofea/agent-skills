@@ -38,7 +38,20 @@ unsafe_code = "forbid"
 
 [lints.clippy]
 pedantic = { level = "warn", priority = -1 }
+
+[profile.release]
+overflow-checks = true           # the release default is false, so integers would wrap silently
+debug = "line-tables-only"       # enough for readable crash reports
+split-debuginfo = "packed"       # keeps those symbols out of the binary
 ```
+
+## Build profiles
+
+Follow [build-profiles.md](../build-profiles.md).
+
+- `debug-assertions` stays off in release, so `debug_assert!` is for internal invariants only. Use a normal check that returns an error, or `assert!`, for anything security-related.
+- `cargo test --release` uses the `release` profile, so it tests the shipped settings. The plain `test` profile inherits from `dev`.
+- **Artefacts:** `target/release/<name>`. **Symbols:** the `.dwp` file beside it on Linux. Confirm the path on the first build, because it varies by platform.
 
 `deny.toml`: keep the generated file. Set `[licenses] allow` to the project's license plus common permissive ones (`MIT`, `Apache-2.0`, `BSD-2-Clause`, `BSD-3-Clause`, `ISC`, `Unicode-3.0`, `Zlib`). Set `[advisories]` to deny vulnerabilities and `[bans] multiple-versions = "warn"`.
 
@@ -52,6 +65,8 @@ pedantic = { level = "warn", priority = -1 }
 | `fmt-check` | `cargo fmt --all -- --check` |
 | `lint` | `cargo clippy --all-targets --all-features -- -D warnings` |
 | `test` | `cargo test --all-features` (passes with zero tests) |
+| `release` | `cargo build --release --locked` |
+| `test-release` | `cargo test --release --locked --all-features` |
 | `security-deps` | `cargo deny check` |
 | `clean` | `cargo clean` |
 
@@ -59,7 +74,7 @@ Each recipe goes tab-indented under its target.
 
 ## .gitignore
 
-`/target .env`. Commit `Cargo.lock` for binaries and libraries alike (current Cargo guidance).
+`.devenv*/ devenv.local.nix /target .env`. Commit `Cargo.lock` for binaries and libraries alike (current Cargo guidance).
 
 ## Pre-commit local hook
 
@@ -72,24 +87,35 @@ Each recipe goes tab-indented under its target.
         types: [rust]
 ```
 
-## CI setup steps
+## devenv
 
-```yaml
-      - uses: dtolnay/rust-toolchain@stable     # branch-based action; pin to a commit SHA
-        with:
-          components: rustfmt, clippy
-      - uses: Swatinem/rust-cache@<sha> # vX
-      - uses: taiki-e/install-action@<sha> # vX
-        with:
-          tool: cargo-deny
+`{{devenv_languages}}`:
+```nix
+  languages.rust.enable = true;
 ```
 
-Dependabot ecosystem: `cargo`. Docker ignore extras: `target`.
+`{{devenv_packages}}`: `cargo-deny`
+
+## CI container
+
+`ci/Containerfile`:
+```dockerfile
+FROM docker.io/library/rust:1-slim-bookworm
+RUN apt-get update && apt-get install -y --no-install-recommends make git && rm -rf /var/lib/apt/lists/*
+RUN rustup component add rustfmt clippy
+RUN cargo install --locked cargo-deny --version <version>    # slow: see "CI image speed" in security.md
+ENV HOME=/tmp CARGO_HOME=/tmp/cargo
+USER 65532:65532
+```
+
+Replace each `<version>` with the latest release. devenv's toolchain comes from nixpkgs and ignores `rust-toolchain.toml`. The CI container uses the toolchain file, so that's the version that counts.
+
+Dependabot ecosystem: `cargo`, and `docker` for `/ci`. Docker ignore extras: `target`.
 
 ## Dockerfile (service)
 
 ```dockerfile
-FROM rust:1-slim-bookworm AS build
+FROM docker.io/library/rust:1-slim-bookworm AS build
 WORKDIR /src
 COPY . .
 RUN cargo build --release --locked

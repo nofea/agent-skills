@@ -23,6 +23,7 @@ Run this on every change, including small ones. No lookup is needed.
 - **Secrets:** are keys and credentials outside the code, and out of logs and error messages?
 - **Crypto:** does it use a well-known library, with a current algorithm for this use?
 - **Failure:** does an error deny access by default, and keep internal details from the caller?
+- **Release builds:** do security checks stay in release builds, outside `assert` and debug-only code?
 - **Memory and resources:** are bounds, sizes and lifetimes safe, and are limits set on untrusted input?
 - **Dependencies:** is any new dependency maintained, pinned and needed?
 
@@ -80,6 +81,13 @@ Code must stay maintainable and diagnosable after release, without opening a way
 - Log with structure, and include the build version and a correlation ID.
 - Redact secrets and personal data before logging.
 - Make errors specific enough to diagnose from logs alone. Keep that detail out of the response to the caller.
+
+### Build profiles
+
+- Security checks never depend on debug builds. `assert`, `NDEBUG`, `#if DEBUG` and `debug_assert!` code can vanish in release, so authentication, validation and bounds checks must be normal code.
+- Build releases with the compiler hardening the language's current guidance recommends. For C and C++, see the [OpenSSF Compiler Options Hardening Guide](https://best.openssf.org/Compiler-Hardening-Guides/Compiler-Options-Hardening-Guide-for-C-and-C++.html).
+- Test the release build, not only the debug build.
+- Keep debug symbols and source maps out of what's published, and retain them for reading crash reports.
 
 ### Developer mode
 

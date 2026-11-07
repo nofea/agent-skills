@@ -9,19 +9,21 @@ Use this when the repo has more than one component in different languages, or mo
 ├── apps/                    # deployables: services, CLIs, web apps
 │   ├── api/                 # its own toolchain (e.g. Go module)
 │   │   ├── Makefile         # same verbs as the root, language-specific
+│   │   ├── ci/Containerfile # this component's CI toolchain
 │   │   ├── AGENTS.md        # short: language, commands, local conventions
 │   │   └── CLAUDE.md        # @AGENTS.md
 │   └── web/
 ├── packages/                # shared libraries consumed by apps
 ├── specs/                   # ONE spec tree for the whole product
 ├── scripts/doctor.sh
+├── devenv.nix  devenv.yaml  # ONE dev environment, with every component's toolchain
 ├── Makefile                 # from Makefile.polyglot.tmpl, delegates to components
 ├── AGENTS.md                # repo-wide: workflow, layout, how components relate
 ├── CLAUDE.md                # @AGENTS.md
 └── .github/workflows/ci.yml # one check job per component + one security job
 ```
 
-- Every component is a complete project as described in its language reference (manifest, src/test layout, tool config), but **without** a README.md, CONTRIBUTING.md, LICENSE, SECURITY.md, `.github/` or a pre-commit config. Those live at the root.
+- Every component is a complete project as described in its language reference (manifest, src/test layout, tool config), but **without** a README.md, CONTRIBUTING.md, LICENSE, SECURITY.md, `.github/`, devenv files or a pre-commit config. Those live at the root. Combine each language's `languages.*` and packages in the root `devenv.nix`.
 - Each component Makefile comes from `Makefile.tmpl` **with the `repo-wide` block removed**. Its `security` target becomes just `security: security-deps`. Secrets, SAST and filesystem scans run once at the root.
 - Where a language ecosystem has a native workspace (pnpm workspaces, Cargo workspace, `go.work`), add the workspace file at the root **only** if two or more components share that language.
 - Shared code between languages goes through a contract (OpenAPI, protobuf, JSON Schema) kept in `packages/<name>-contract/`. Mention it in `specs/architecture.md`.
@@ -56,7 +58,9 @@ Write one local hook per component, limited to that component's files:
 
 ## CI
 
-One `check-<name>` job per component, with `defaults.run.working-directory: apps/<name>`, using that language's setup steps. Use `paths` filters only if the user asks: on a fresh repo, running every job keeps things simple.
+One `check-<name>` job per component, with `defaults.run.working-directory: apps/<name>`, running `make ci-check` in that component's CI container. If a component needs files outside its folder, such as a shared package, set `CI_ROOT := $(abspath ../..)` and `CI_WORKDIR := /src/apps/<name>` in its Makefile. Use `paths` filters only if the user asks: on a fresh repo, running every job keeps things simple.
+
+For releases, each released component gets its own workflow, `release-<name>.yml`, triggered by a prefixed tag such as `api-v1.2.0`. Trusted publishers must name that exact workflow file. See [release-signing.md](release-signing.md).
 
 ## Dependabot
 

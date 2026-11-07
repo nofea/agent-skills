@@ -5,9 +5,16 @@ SHELL := bash
 .SHELLFLAGS := -eu -o pipefail -c
 
 COMPONENTS := {{components}}
-PER_COMPONENT := setup build fmt fmt-check test security-deps clean
+PER_COMPONENT := setup build fmt fmt-check test release test-release ci-check ci-release security-deps clean
 
-.PHONY: help doctor lint security security-secrets security-sast security-fs check $(PER_COMPONENT)
+CONTAINER ?= $(shell command -v podman 2>/dev/null || command -v docker 2>/dev/null)
+export CONTAINER
+CI_USER = $(if $(findstring podman,$(CONTAINER)),--userns=keep-id) --user $(shell id -u):$(shell id -g)
+GITLEAKS = $(CONTAINER) run --rm $(CI_USER) -v "$(CURDIR):/repo:Z" ghcr.io/gitleaks/gitleaks:{{gitleaks_version}}
+SEMGREP = $(CONTAINER) run --rm $(CI_USER) -e HOME=/tmp -v "$(CURDIR):/src:Z" -w /src docker.io/semgrep/semgrep:{{semgrep_version}}
+TRIVY = $(CONTAINER) run --rm $(CI_USER) -e HOME=/tmp -v "$(CURDIR):/src:Z" -w /src docker.io/aquasec/trivy:{{trivy_version}}
+
+.PHONY: help doctor lint security security-secrets security-sast security-fs ci-security check $(PER_COMPONENT)
 
 help: ## List targets
 	@grep -hE '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-18s %s\n", $$1, $$2}'
@@ -27,11 +34,16 @@ security: security-deps security-secrets security-sast security-fs ## All securi
 security-secrets: ## Scan the working tree for secrets (gitleaks)
 	gitleaks dir . --redact --no-banner
 
-security-sast: ## Static analysis (semgrep)
-	semgrep scan --config p/default --error --metrics=off --quiet
+security-sast: ## Static analysis (semgrep, in a container)
+	$(SEMGREP) semgrep scan --config p/default --error --metrics=off --quiet
 
 security-fs: ## Vulnerability + misconfiguration scan of the filesystem (trivy)
-	trivy fs --scanners vuln,misconfig --severity HIGH,CRITICAL --exit-code 1 --quiet .
+	trivy fs --scanners vuln,misconfig --severity HIGH,CRITICAL --exit-code 1 --quiet --skip-dirs .devenv .
+
+ci-security: ## Scan with pinned containers, including the full git history
+	$(GITLEAKS) git /repo --redact --no-banner
+	$(SEMGREP) semgrep scan --config p/default --error --metrics=off --quiet
+	$(TRIVY) fs --scanners vuln,misconfig --severity HIGH,CRITICAL --exit-code 1 --quiet --skip-dirs .devenv .
 
 # >>> docs (with no Doxygen components, remove this block and `docs-check` from `check`)
 DOCS_COMPONENTS := {{docs_components}}
@@ -45,4 +57,4 @@ docs-check: ## Fail on undocumented functions and types in every Doxygen compone
 	@for c in $(DOCS_COMPONENTS); do echo "==> $$c: docs-check"; $(MAKE) -C $$c docs-check; done
 # <<< docs
 
-check: lint docs-check build test security ## Everything CI runs
+check: lint docs-check build test release test-release security ## Everything CI runs

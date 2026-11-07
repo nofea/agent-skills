@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Check that the tools a scaffolded project needs are installed.
-# Usage: doctor.sh [python] [typescript] [go] [rust] [java-kotlin] [csharp] [cpp] [generic] [doxygen]
+# Usage: doctor.sh [python] [typescript] [go] [rust] [java-kotlin] [csharp] [cpp] [generic] [doxygen] [signing]
 # Exits 1 if any required tool is missing. Optional tools are only reported.
 # The scaffold-project skill copies this script into generated projects as scripts/doctor.sh.
 set -uo pipefail
@@ -36,9 +36,14 @@ echo "Shared tools:"
 need make        make --version
 need pre-commit  pre-commit --version
 need gitleaks    gitleaks version
-need semgrep     semgrep --version
 need trivy       trivy --version
-want docker      docker --version
+want devenv      devenv version
+
+# Containers run CI and semgrep. Either engine works.
+if ! have podman podman --version && ! have docker docker --version; then
+  printf '  MISSING  podman or docker\n'
+  missing=1
+fi
 
 for lang in "$@"; do
   echo "$lang:"
@@ -71,6 +76,8 @@ for lang in "$@"; do
       need osv-scanner osv-scanner --version ;;
     doxygen)
       need doxygen doxygen --version ;;
+    signing)
+      want cosign cosign version ;;   # CI installs its own copy; this is for verifying releases locally
     generic)
       echo "  (check the toolchain listed in CONTRIBUTING.md by hand)" ;;
     *)
@@ -80,7 +87,7 @@ done
 
 if (( missing )); then
   echo
-  echo "Some required tools are missing. Install commands: see CONTRIBUTING.md (Prerequisites)."
+  echo "Some required tools are missing. Run 'devenv shell' first, or see CONTRIBUTING.md (Prerequisites)."
   exit 1
 fi
 echo
