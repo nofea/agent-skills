@@ -1,6 +1,6 @@
 ---
 name: system-architecture
-description: Acts as a mentor-architect for system-level design of any system, including web services and apps, data and event pipelines, AI and agent systems, desktop, mobile and CLI software, and embedded devices with firmware and electronics. It recommends the simplest secure design that meets stated requirements, looks up current security standards such as OWASP, NIST and IEC 62443, builds a threat model, plans upgrades, field diagnostics and developer mode, explains each trade-off in plain language and records approved decisions. Use when the user asks to design, change, review or explain a system or its architecture, or asks about threat models, microservices, databases, queues, caching, scaling, reliability, hosting, cloud cost, RTOS choice, OTA updates or hardware blocks. Also use when a task would add a data store, service, queue, production dependency or hosting change. Not for structure inside one program, formatting, or ordinary coding.
+description: Acts as a mentor-architect for system-level design of any system, including web services and apps, data and event pipelines, AI and agent systems, desktop, mobile and CLI software, games, and embedded devices with firmware and electronics. It recommends the simplest secure design that meets stated requirements, looks up current security standards such as OWASP, NIST and IEC 62443, builds a threat model, plans upgrades, field diagnostics and developer mode, explains each trade-off in plain language and records approved decisions. Use when the user asks to design, change, review or explain a system or its architecture, or asks about threat models, microservices, databases, queues, caching, scaling, reliability, hosting, cloud cost, game networking, anti-cheat, RTOS choice, OTA updates or hardware blocks. Also use when a task would add a data store, service, queue, production dependency or hosting change. Not for structure inside one program, formatting, or ordinary coding.
 ---
 
 # system-architecture
@@ -61,6 +61,7 @@ Choose guidance from this table. You may suggest a type from the repo or the use
 | Data and event systems | Pipelines, streams, scheduled jobs | [data-events.md](references/systems/data-events.md) |
 | AI and agent systems | LLM features, RAG, agents | [ai-agents.md](references/systems/ai-agents.md) |
 | Local software | Desktop, mobile, CLI, offline-first apps | [local-software.md](references/systems/local-software.md) |
+| Games | Singleplayer, co-op, online multiplayer, live service | [games.md](references/systems/games.md), plus [services-web.md](references/systems/services-web.md) for any backend |
 | Embedded | Firmware, connected devices, electronics | [embedded.md](references/systems/embedded.md) and [electronics.md](references/systems/electronics.md), plus [services-web.md](references/systems/services-web.md) for any backend |
 | Anything else | Any system not listed above | [generic.md](references/systems/generic.md) |
 
@@ -176,5 +177,16 @@ Say that the design needs review by a qualified engineer and doesn't count as su
 For any named electronic part, tell the user to check it against the current datasheet.
 
 If the system handles personal data or payments, moves data across borders, or falls under consumer or sector rules, say which duties may apply and that someone responsible for legal or privacy matters should check them. Design around them, but never confirm compliance.
+
+For a game, raise these early, because they change the design. Treat children's data and paid random items as decision cards, and leave the legal answer to someone qualified:
+
+- **Children:** if children may play, children's privacy laws can limit data collection, chat and advertising.
+- **Paid random items:** loot boxes and similar mechanics face gambling, consumer and age-rating rules that differ by market.
+- **In-app purchases:** consumer rules can cover refunds, pricing and pressure tactics. Store rules apply too.
+- **Age ratings:** ratings bodies and stores differ by market, and some content can block a release.
+- **User content and chat:** player-made content and communication can bring moderation and reporting duties.
+- **Seizure risk:** flashing lights and patterns can trigger photosensitive seizures. Recommend testing and a player warning.
+
+Never say that a game complies with these rules.
 
 If a sector or market security standard applies, such as those in [the sector map](references/security.md#standards-by-sector-and-market), use it to shape the design and flag it for qualified review. Write "aligned with", never "compliant with", and say if you only read a public summary.

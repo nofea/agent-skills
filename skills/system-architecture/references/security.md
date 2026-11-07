@@ -134,6 +134,7 @@ Developer mode may relax authentication, signing and logging for rapid developme
 | Data and event systems | [OWASP ASVS](https://owasp.org/www-project-application-security-verification-standard/) for any service interfaces, and [OWASP CI/CD Security Risks](https://owasp.org/www-project-top-10-ci-cd-security-risks/) for pipelines run from code |
 | AI and agent systems | [OWASP Top 10 for LLM Applications](https://genai.owasp.org/llm-top-10/), [OWASP Top 10 for Agentic Applications](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/), [OWASP Agent Control Standard](https://genai.owasp.org/resource/agent-control-standard-acs/), [NIST AI RMF](https://www.nist.gov/itl/ai-risk-management-framework) |
 | Local software | [OWASP MASVS](https://mas.owasp.org/MASVS/) for mobile, [OWASP Desktop App Security Top 10](https://owasp.org/www-project-desktop-app-security-top-10/) for desktop |
+| Games | [OWASP Desktop App Security Top 10](https://owasp.org/www-project-desktop-app-security-top-10/), [OWASP MASVS](https://mas.owasp.org/MASVS/) for mobile, [OWASP ASVS](https://owasp.org/www-project-application-security-verification-standard/) for any backend, and the store's and engine's own security guidance |
 | Embedded | [ETSI EN 303 645](https://www.etsi.org/technologies/consumer-iot-security) for consumer devices, [NIST IR 8259](https://csrc.nist.gov/pubs/ir/8259/final), [RFC 9019](https://www.rfc-editor.org/rfc/rfc9019) for firmware updates |
 | Anything else | Search for the type's own guidance, such as the [OWASP Smart Contract Top 10](https://owasp.org/www-project-smart-contract-top-10/) for smart contracts |
 
@@ -150,6 +151,8 @@ Raise these only when the system's sector or market matches. Most are paid or le
 | Road vehicles and their parts | [ISO/SAE 21434](https://www.iso.org/standard/70918.html) |
 | Products with digital elements sold in the EU | [EU Cyber Resilience Act](https://digital-strategy.ec.europa.eu/en/policies/cyber-resilience-act) |
 | Card payments | [PCI DSS](https://www.pcisecuritystandards.org/standards/pci-dss/) |
+| Games or apps children may use | Children's privacy law in each market, such as [COPPA](https://www.ftc.gov/legal-library/browse/rules/childrens-online-privacy-protection-rule-coppa) in the US and the [UK Children's Code](https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/childrens-information/childrens-code-guidance-and-resources/) |
+| Games sold to the public | Age ratings by market, such as [ESRB](https://www.esrb.org/), [PEGI](https://pegi.info/) and [IARC](https://www.globalratings.com/) |
 
 Check for others that fit, including national rules in the countries of sale.
 

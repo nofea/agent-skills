@@ -32,6 +32,17 @@ Each rule applies in every language.
 11. **Keep release builds rebuildable.** Lockfiles and pinned toolchains make it possible to rebuild any released version when reproducing a fault.
 12. **Only containers build what ships.** `make ci-release` builds the release in the CI container. `make release` in devenv is for trying a build locally. A binary built there can link to `/nix/store`, so it won't run on another machine. macOS and Windows builds, which can't use Linux containers, build natively on CI runners.
 
+## Game engines
+
+Rule 5 needs care, because engines test inside the editor or a debug player, and often strip test code from what ships. Unreal's Shipping build has no console commands, for example.
+
+- `make test` runs the engine's tests on the debug or development configuration.
+- `make test-release` runs the [shipped-build smoke test](project-types.md#shipped-build-smoke-test), plus any tests that can use the release settings, such as `cargo test --release`.
+
+This is the only exception to testing the shipped build fully, and the smoke test still runs the exact artefact. Report what it doesn't reach.
+
+Rule 12 still applies. Godot, Bevy and MonoGame build in the CI container. Unity and Unreal do too, but from licensed images the user provides. On a host-installed editor, `make release` is for trying a build locally, as with devenv.
+
 ## Existing repos
 
 - `release` is a common target name, and it often publishes. If the repo's `release` target signs, uploads or tags anything, report the clash and ask, as [workflow-existing-repo.md](workflow-existing-repo.md) describes. Don't change the target.

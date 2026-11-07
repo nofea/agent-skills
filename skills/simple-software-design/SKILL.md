@@ -1,6 +1,6 @@
 ---
 name: simple-software-design
-description: Designs simple, elegant, secure software structure in any programming language, with SOLID, DRY and KISS applied to functions, types, modules, and their boundaries and dependencies, and with current secure-coding standards such as OWASP and SEI CERT looked up for the language. Use whenever writing, editing, implementing or refactoring code, including new features and bug fixes, and when designing modules or interfaces, deciding where code belongs, or reviewing or auditing a codebase's code-level design. Not for formatting or code style, or for system-level decisions such as services, databases, queues or hosting, which belong to `system-architecture` when it's installed.
+description: Designs simple, elegant, secure software structure in any programming language, including game code in engines such as Godot, Unity, Unreal, Bevy and MonoGame, with SOLID, DRY and KISS applied to functions, types, modules, and their boundaries and dependencies, and with current secure-coding standards such as OWASP and SEI CERT looked up for the language. Use whenever writing, editing, implementing or refactoring code, including new features and bug fixes, and when designing modules or interfaces, deciding where code belongs, or reviewing or auditing a codebase's code-level design. Not for formatting or code style, or for system-level decisions such as services, databases, queues or hosting, which belong to `system-architecture` when it's installed.
 ---
 
 # simple-software-design
@@ -28,6 +28,7 @@ A concrete problem is something you can point at:
 - two implementations that exist now
 - a rule that's written in two places
 - behaviour you can't test because of a hard-wired dependency
+- in a game, a profiler result that misses the [frame budget](#game-code)
 
 "We might need this later" isn't a concrete problem. Without one, don't add the interface, layer, factory or extension point. Write the plain code, which is easy to restructure when a real need arrives.
 
@@ -71,6 +72,14 @@ Code that only looks alike stays separate. To tell the difference, ask: if one c
 - Prefer the standard library over a new dependency.
 - If two designs both satisfy the rules above, choose the one that's easier to explain.
 
+## Game code
+
+Read [the game section of principles.md](references/principles.md#game-code) when the code runs in a game or engine.
+
+- **Frame budget:** the project states one, such as 16.6 ms for 60 FPS. A profiler result that misses it, on the target hardware, justifies pooling, data-oriented layouts or ECS. Plain code stays the default until then.
+- **Engine patterns:** using what the engine is built around, such as Bevy systems or Godot signals, needs no justification. Adding your own framework on top of it does.
+- **Visual scripts:** write systems in code. Never edit binary assets. In a review, list the visual scripts you couldn't read, so nobody assumes they passed.
+
 ## Writing code
 
 1. **Read first.** Read the repo's architecture docs, if any, and the code around the change. Follow the established structure.
@@ -84,7 +93,7 @@ Code that only looks alike stays separate. To tell the difference, ask: if one c
 Follow these steps for code reviews and architecture audits.
 
 1. **Confirm the target.** If the user didn't name one, ask what to review, such as the current changes, a module or the whole repo.
-2. **Read first.** Read the repo's architecture docs, then review against the rules above, including the real-needs guard and [secure-coding.md](references/secure-coding.md). Flagging speculative structure is as valid as flagging a missing boundary. Look up the current standards if the target includes sensitive code.
+2. **Read first.** Read the repo's architecture docs, then review against the rules above, including the real-needs guard and [secure-coding.md](references/secure-coding.md). Flagging speculative structure is as valid as flagging a missing boundary. Look up the current standards if the target includes sensitive code. List anything you couldn't read, such as Blueprints, under the findings.
 3. **Report the findings,** most severe first. Make no edits at this stage. Each finding gives:
    - the file and line
    - the principle broken, or the security control or weakness, such as a CWE

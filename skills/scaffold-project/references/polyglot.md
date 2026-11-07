@@ -28,6 +28,8 @@ Use this when the repo has more than one component in different languages, or mo
 - Where a language ecosystem has a native workspace (pnpm workspaces, Cargo workspace, `go.work`), add the workspace file at the root **only** if two or more components share that language.
 - Shared code between languages goes through a contract (OpenAPI, protobuf, JSON Schema) kept in `packages/<name>-contract/`. Mention it in `specs/architecture.md`.
 
+A game with a dedicated server is a common case: `apps/game` holds the engine project, and `apps/server` holds the service, often in another language. Keep the engine project's own layout inside its folder. Put messages shared by both sides in `packages/<name>-contract/`.
+
 ## Root Makefile
 
 `{{components}}` lists each component directory, separated by spaces, in dependency order (packages first). The root runs per-component targets in a loop and runs the repo-wide scans once.

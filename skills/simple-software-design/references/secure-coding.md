@@ -118,8 +118,20 @@ Rapid-development shortcuts may relax authentication, signing and logging, on lo
 | Web apps and APIs | [OWASP ASVS](https://owasp.org/www-project-application-security-verification-standard/), [OWASP Top 10](https://owasp.org/Top10/), [OWASP API Security Top 10](https://owasp.org/API-Security/) |
 | Mobile apps | [OWASP MASVS](https://mas.owasp.org/MASVS/), [Android security checklist](https://developer.android.com/privacy-and-security/security-tips), [Apple security documentation](https://developer.apple.com/documentation/security) |
 | Desktop apps | [OWASP Desktop App Security Top 10](https://owasp.org/www-project-desktop-app-security-top-10/) |
+| Games | The rows for the target platform, plus [Game code](#game-code) below |
 | LLM features and agents | [OWASP Top 10 for LLM Applications](https://genai.owasp.org/llm-top-10/) |
 | Smart contracts | [OWASP Smart Contract Top 10](https://owasp.org/www-project-smart-contract-top-10/) |
 | Build pipelines | [OWASP CI/CD Security Risks](https://owasp.org/www-project-top-10-ci-cd-security-risks/) |
+
+### Game code
+
+Players control their own machine, so treat save files, mods, replays, shared levels and network messages as untrusted input. Players also swap these files with each other.
+
+- **Saves and shared files:** use a data-only format, such as JSON, and validate every value, including lengths and ranges. Include a format version.
+- **Godot:** don't use `load()` or `ResourceLoader` on `.tres`, `.res` or `.tscn` files from outside the game, because they can run embedded scripts. Godot's forums and proposals warn that even `ConfigFile` and `str_to_var` can load objects, and no official guidance covers this, so label it `unverified` and prefer `JSON`.
+- **Unity and MonoGame:** never use `BinaryFormatter`. [Microsoft's guide](https://learn.microsoft.com/dotnet/standard/serialization/binaryformatter-security-guide) calls it impossible to secure, and names shared game saves as a risk. Avoid polymorphic type handling in JSON too.
+- **Unreal:** don't trust `FArchive` or `SaveGame` data from another player, and validate every `Server` RPC with `_Validate` or equivalent server-side checks.
+- **Network messages:** the server re-checks every action. The client's result is never the truth for anything that matters.
+- **Secrets:** nothing shipped in the client is secret. That includes keys, server passwords and hidden content.
 
 If code falls under a sector standard or regulation, such as medical, automotive, industrial or payment rules, say so and write "aligned with", never "compliant with". Ask for review by someone qualified.
