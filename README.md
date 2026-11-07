@@ -14,10 +14,10 @@ npx skills add nofea/agent-skills@<skill-name> -g -y     # global, no prompts
 
 | Skill | Description |
 | --- | --- |
-| [scaffold-project](skills/scaffold-project/SKILL.md) | Sets up a new or existing repo for spec-driven agentic coding |
-| [readable-code](skills/readable-code/SKILL.md) | Writes clean, human-readable code in any language |
-| [simple-software-design](skills/simple-software-design/SKILL.md) | Keeps code structure simple and secure, with SOLID, DRY, KISS and current secure-coding standards in any language |
-| [system-architecture](skills/system-architecture/SKILL.md) | Designs, changes, reviews and explains secure systems, using current security standards, and explains its reasoning as it goes |
+| [scaffold-project](skills/scaffold-project/SKILL.md) | Sets up a new or existing repo for spec-driven agentic coding, including game projects |
+| [readable-code](skills/readable-code/SKILL.md) | Writes clean, human-readable code in any language, including game engine code |
+| [simple-software-design](skills/simple-software-design/SKILL.md) | Keeps code structure simple and secure, with SOLID, DRY, KISS and current secure-coding standards in any language, including games |
+| [system-architecture](skills/system-architecture/SKILL.md) | Designs, changes, reviews and explains secure systems, including games, using current security standards, and explains its reasoning as it goes |
 
 ### scaffold-project
 
@@ -31,16 +31,17 @@ What a scaffolded project gets:
 
 - **Specs:** `specs/` holds the product, the architecture and one folder per feature. Agents read it before coding and update it as they work.
 - **Agent instructions:** `AGENTS.md` covers how to work in the repo, and `CLAUDE.md` imports it.
-- **Language-appropriate layout:** folders and tool config for Python, TypeScript/Node, Go, Rust, Java/Kotlin, C#/.NET or C/C++, with a generic fallback for anything else. Projects can be a CLI, library, web service/API, web app, mobile app or desktop app.
+- **Language-appropriate layout:** folders and tool config for Python, TypeScript/Node, Go, Rust, Java/Kotlin, C#/.NET or C/C++, with a generic fallback for anything else. Projects can be a CLI, library, web service/API, web app, mobile app, desktop app or game.
+- **Game projects:** Godot, Unity, Unreal, Bevy and MonoGame have their own setup, and other engines get a guided fallback. New projects also get Git LFS for binary assets. Godot, Bevy and MonoGame recipes were run end to end. The Unity and Unreal recipes haven't been run, so the agent marks them as unconfirmed.
 - **Allman braces:** generated formatter configs use Allman in C, C++, C#, Java, PHP and Swift. Other languages keep their standard style.
-- **Dev environment:** `devenv.nix` gives everyone the same tools, with `devenv.lock` pinning them.
-- **CI/CD in containers:** `ci/Containerfile` holds CI's toolchain, so `make ci-check` runs the same under podman or Docker, locally and on the server. Linux releases are built there too, because a binary built in devenv can link to `/nix/store`.
+- **Dev environment:** `devenv.nix` gives everyone the same tools, with `devenv.lock` pinning them. The one exception is the licensed Unity and Unreal editors, which stay on your machine.
+- **CI/CD in containers:** `ci/Containerfile` holds CI's toolchain, so `make ci-check` runs the same under podman or Docker, locally and on the server. Linux releases are built there too, because a binary built in devenv can link to `/nix/store`. Unity and Unreal CI needs your own licence and a private image.
 - **Makefile:** the same verbs in every language: `build`, `test`, `release`, `test-release`, `ci-check`, `ci-release`, `lint`, `fmt`, `security`, `check` and `doctor`.
-- **Debug and release builds:** `build` and `test` use the debug profile, with sanitizers where the language has them. `release` and `test-release` use what ships, with compiler hardening for C/C++, and CI tests both.
+- **Debug and release builds:** `build` and `test` use the debug profile, with sanitizers where the language has them. `release` and `test-release` use what ships, with compiler hardening for C/C++, and CI tests both. For games, `test-release` runs the shipped build headless as a smoke test.
 - **Doc comment check:** `make docs` builds API docs and `make docs-check` fails on undocumented functions and types, using Doxygen. It covers Python, Java, C#, C/C++ and PHP, among others, but not Go, Rust, TypeScript or Kotlin. In existing repos it only reports until you turn it on.
 - **Automation:** pre-commit hooks, GitHub Actions CI and Dependabot.
 - **Security scanning:** gitleaks, semgrep, trivy and a dependency audit.
-- **Signed releases (optional):** name your distribution targets, and a tag-triggered `release.yml` builds, signs and publishes behind an approval step. It covers package registries, containers, GitHub releases, mobile app stores, and desktop stores with OS signing.
+- **Signed releases (optional):** name your distribution targets, and a tag-triggered `release.yml` builds, signs and publishes behind an approval step. It covers package registries, containers, GitHub releases, mobile app stores, desktop stores with OS signing, and game stores (Steam, itch.io, Epic Games Store and GOG). Game store uploads stop before the public branch, so you make each build public yourself.
 - **Docs:** `README.md` for users, `CONTRIBUTING.md` for developers, plus `SECURITY.md`, `LICENSE`, `.editorconfig` and `.gitignore`.
 
 How it works:
@@ -67,7 +68,8 @@ The rules:
 - **Blank lines** around `if`/`else`, loops, `switch`/`match`, `try`/`catch` and similar blocks, in every language.
 - **Doc comments** on every named function and type, in a Doxygen-style format or the language's own where Doxygen can't read it.
 - **Inline comments** only where the logic is complex or the code can't explain itself.
-- **Core guidelines** for each language, such as the C++ Core Guidelines, PEP 8 and Effective Go. The agent reads only the ones it needs.
+- **Core guidelines** for each language, such as the C++ Core Guidelines, PEP 8, Effective Go and the GDScript style guide. The agent reads only the ones it needs.
+- **Game engines:** the same rules apply in Unity, Unreal, Godot, Bevy and MonoGame, including doc comments on engine callbacks. Anything the engine's tooling requires, such as Unreal's type prefixes, comes first.
 
 If a repo enforces its own style through a formatter, linter or CI check, that style wins and the agent tells you. Otherwise, new code uses these rules and small edits match the function around them. Unchanged code is left alone. The skill includes sample formatter configs, which are added to a repo only if you ask.
 
@@ -87,6 +89,7 @@ The rules:
 - **Native idioms:** principles are applied through functions, modules, traits or protocols, with no classes added just to satisfy a principle.
 - **Secure by design:** every change gets a short security check. Sensitive code and larger changes also get a lookup of current standards, such as OWASP and SEI CERT. Core controls can't be waived, and other practices need you to accept the specific risk.
 - **Lifecycle:** code stays upgradable, production faults are diagnosed from logs and telemetry only, and developer-mode code can't reach production. These rules apply even if no standard covers them.
+- **Games:** a project states a frame budget, and a profiler result that misses it justifies pooling, ECS or similar structure. Saves, mods and network messages count as untrusted input. Reviews say which visual scripts, such as Blueprints, weren't read.
 
 How it works:
 
@@ -108,9 +111,10 @@ The rules:
 - **Simplest shape first:** each system type has a simple starting shape, and each addition needs a stated requirement, ideally with a number. Security components can instead trace to a named threat or an applicable control.
 - **Secure by design:** it looks up current standards for the system, such as OWASP, NIST, ETSI and IEC 62443, builds a threat model, and applies a security baseline that outranks recorded decisions. Core controls can't be waived, and other controls need you to accept the specific risk.
 - **Lifecycle:** every design plans for upgrades and patching, field debugging through logs and telemetry only, and a developer mode that can't reach production. These rules apply even if no standard covers them, and a stricter standard wins.
-- **You confirm the system type:** the skill covers services and web apps, data and event systems, AI and agent systems, local software, and embedded devices with firmware and electronics. Anything else uses a generic guide. A system can combine types.
+- **You confirm the system type:** the skill covers services and web apps, data and event systems, AI and agent systems, local software, games, and embedded devices with firmware and electronics. Anything else uses a generic guide. A system can combine types.
 - **Decision level:** it decides what to use, but doesn't write infrastructure config. For electronics, it stops at block diagrams, power trees and part requirements, with no schematics or PCB layouts.
-- **Safety:** it flags physically dangerous or regulated systems, and work with mains voltage, lithium batteries or high current, as needing review by a qualified engineer. It also raises privacy, sector security standards and other legal duties, but never confirms compliance. Check any named part against its datasheet.
+- **Games:** the server decides competitive play, shared economies and purchases, and casual co-op can stay peer-hosted. Kernel-level anti-cheat is a decision for you. Console guidance stays at public-level design advice, because console tools are under NDA.
+- **Safety:** it flags physically dangerous or regulated systems, and work with mains voltage, lithium batteries or high current, as needing review by a qualified engineer. It also raises privacy, sector security standards and other legal duties, including children's privacy, paid random items, age ratings and seizure risk in games, but never confirms compliance. Check any named part against its datasheet.
 
 How it works:
 

@@ -34,6 +34,8 @@ Supply-chain attacks through hijacked action tags and hook revisions are real, s
 - `devenv.lock` pins the dev environment. Commit it.
 - `{{gitleaks_rev}}`, `{{pre_commit_hooks_rev}}`: the latest tags of those repos. After the user runs `pre-commit install`, `pre-commit autoupdate` can refresh them.
 
+Game engines have generated folders that scanners shouldn't crawl. Each [engine reference](project-types.md#game) gives `{{semgrepignore_extra}}` and `{{trivy_skip_extra}}`. For anything else, leave both empty and remove the placeholder.
+
 If the network is unavailable, use the latest major tag you know (`@v5`), and tell the user in the hand-off that the pins need resolving.
 
 ### `{{check_jobs}}` in `ci.yml.tmpl`

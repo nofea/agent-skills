@@ -11,7 +11,7 @@ Apply these rules to the code you write or change. Don't reformat anything else.
 
 When rules conflict, the first match in this list wins:
 
-1. **What the language requires.** Code must compile and keep its meaning.
+1. **What the language requires.** Code must compile and keep its meaning. In a game project, this includes what the engine's tooling requires, such as Unreal's type prefixes and macros.
 2. **Enforced repo config.** If the repo enforces a style, follow it, even if it conflicts with the house rules. Tell the user which config overrode which rule.
 3. **House rules.** Everything in this file.
 4. **Language guidelines.** The language reference files, which never override house rules on layout.
@@ -21,14 +21,14 @@ A style is **enforced** when a formatter config, linter config, CI job or pre-co
 ## Steps
 
 1. Look for enforced style config in the repo.
-2. Read the reference for each language you're writing, from the table below.
+2. Read the reference for each language you're writing, from the table below. In a game project, also read [engines.md](references/engines.md).
 3. Write the code using the rules below, including a doc comment on each function and type you write or change.
 4. If the repo has a formatter, run it on the files you changed only. If it has `make docs-check`, run that too.
 5. Tell the user about any house rule that a repo config overrode.
 
 ## Allman braces
 
-**Use Allman in C, C++, C#, Java, PHP and Swift.** Every other language keeps its normal style, including Go, Rust, JavaScript, TypeScript and Kotlin.
+**Use Allman in C, C++, C#, Java, PHP and Swift.** Every other language keeps its normal style, including Go, Rust, JavaScript, TypeScript, Kotlin and GDScript.
 
 - Put the opening and closing brace each on its own line, for functions, types, namespaces and control flow.
 - Put `else`, `catch` and `finally` on their own line after the closing brace. The `while` of a `do` loop stays on the closing brace's line.
@@ -94,7 +94,7 @@ Doc comments and inline comments follow separate rules. Doc comments are require
 
 ### Doc comments
 
-**Add a doc comment to every named function and method, and to every class, struct, interface and enum.** That includes private functions, constructors, overrides and one-line getters. Anonymous lambdas, closures and test functions don't need one.
+**Add a doc comment to every named function and method, and to every class, struct, interface and enum.** That includes private functions, constructors, overrides, engine callbacks such as `Update()` and `_process()`, and one-line getters. Anonymous lambdas, closures and test functions don't need one.
 
 Each function's doc comment covers all of these, even when they look obvious:
 
@@ -150,12 +150,15 @@ Read only the files you need.
 | Java | [java.md](references/languages/java.md) | Yes |
 | PHP | [php.md](references/languages/php.md) | Yes |
 | Swift | [swift.md](references/languages/swift.md) | Yes |
+| GDScript | [gdscript.md](references/languages/gdscript.md) | No |
 | Go | [go.md](references/languages/go.md) | No |
 | Kotlin | [kotlin.md](references/languages/kotlin.md) | No |
 | Python | [python.md](references/languages/python.md) | No |
 | Rust | [rust.md](references/languages/rust.md) | No |
 | TypeScript, JavaScript | [typescript.md](references/languages/typescript.md) | No |
 | Anything else | [generic.md](references/languages/generic.md) | No |
+
+These rules cover text only. Don't edit visual scripts or other binary assets, such as Unreal Blueprints. If your work depends on one, say that you didn't read it.
 
 ## Formatter configs
 
@@ -164,9 +167,10 @@ Add these to a repo only when the user asks. Each file says where it goes.
 | Language | Asset |
 | --- | --- |
 | C, C++ | [clang-format](assets/clang-format) |
+| Unreal C++ | [clang-format-unreal](assets/clang-format-unreal) |
 | C# | [editorconfig-csharp](assets/editorconfig-csharp) |
 | Java | [eclipse-java-allman.xml](assets/eclipse-java-allman.xml), used with Spotless `eclipse().configFile(...)` |
 | PHP | [php-cs-fixer.php](assets/php-cs-fixer.php) |
 | Swift | [swiftformat](assets/swiftformat) |
 
-These formatters enforce braces, but they can't add the blank lines around logic blocks. Those are up to you.
+GDScript needs no asset, because `gdformat`'s defaults follow the style guide. These formatters enforce braces, but they can't add the blank lines around logic blocks. Those are up to you.

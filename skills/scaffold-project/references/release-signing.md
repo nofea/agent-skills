@@ -40,6 +40,10 @@ Support varies, so check each target's current docs while scaffolding, and repor
 | Microsoft Store, MSIX | **The Store re-signs it.** No certificate needed | Partner Center access | Confirmed |
 | Microsoft Store, EXE or MSI | Authenticode, by you, before submission | Artifact Signing or an HSM | Confirmed |
 | Windows outside the store | Authenticode. MSIX sideloading needs it too | Artifact Signing or an HSM | Confirmed |
+| Steam | No Steam signature. See [game stores](#game-stores) | Dedicated build account, cached login file | Upload and branch rules confirmed. Recipe not run |
+| itch.io | No itch.io signature | `BUTLER_API_KEY` | Push and login confirmed. Hidden channel behaviour `unverified` |
+| Epic Games Store | No Epic signature | BuildPatch Tool client ID and secret | `unverified` |
+| GOG | No GOG signature | Partner account, cached Pipeline Builder login | Branch rule confirmed. Recipe not run |
 
 ## Filling release.yml.tmpl
 
@@ -244,6 +248,76 @@ Use `windows-latest` for `sign`.
 
 For Authenticode, prefer [Artifact Signing](https://learn.microsoft.com/en-us/azure/artifact-signing/overview) (formerly Trusted Signing). Keys stay in Microsoft's HSMs, and `Azure/artifact-signing-action` runs on Windows runners with OIDC. Individual developers must be in the United States or Canada, so otherwise use a CA certificate held in an HSM or cloud key service. Never use a loose `.pfx`.
 
+### Game stores
+
+A human makes the build public. Each store's automation can upload, but this template stops short of the public branch, and a person promotes the build in the store's own site after testing it. The approval steps in `release.yml` come first. This applies even where a store's tool could do it.
+
+These stores don't sign your build, but the operating systems still judge it. Sign and notarize macOS builds using the [macOS recipe](#macos-outside-the-store), and consider [Authenticode](#windows) on Windows, so that players don't get warnings. Each store's recipe is in `{{publish_steps}}`. Store tools need partner access, so nobody has run these recipes end to end. Tell the user, and start with one test upload.
+
+#### Steam
+
+Create a dedicated build account with only **Edit App Metadata** and **Publish App Changes To Steam**. Sign in once by hand with `steamcmd`, complete Steam Guard, and save the `config/config.vdf` that results as a base64 secret named `STEAM_CONFIG_VDF`. Logging in again with the password issues a new token, so CI logs in with the username only.
+
+Create a password-protected `rc` branch in Steamworks, and keep the app build script in `store/steam/app_build.vdf`:
+
+```text
+"AppBuild"
+{
+  "AppID" "<app-id>"
+  "Desc" "<version>"
+  "ContentRoot" "../../release"
+  "BuildOutput" "../../steam-output"
+  "SetLive" "rc"
+  "Depots"
+  {
+    "<depot-id>"
+    {
+      "FileMapping"
+      {
+        "LocalPath" "*"
+        "DepotPath" "."
+        "Recursive" "1"
+      }
+    }
+  }
+}
+```
+
+```yaml
+      - name: Upload to the Steam rc branch
+        env:
+          STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
+          STEAM_CONFIG_VDF: ${{ secrets.STEAM_CONFIG_VDF }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/steamcmd" "$HOME/Steam/config"
+          curl -fsSL https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz | tar xz -C "$RUNNER_TEMP/steamcmd"
+          base64 -d <<<"$STEAM_CONFIG_VDF" > "$HOME/Steam/config/config.vdf"
+          "$RUNNER_TEMP/steamcmd/steamcmd.sh" +login "$STEAM_USERNAME" +run_app_build "$PWD/store/steam/app_build.vdf" +quit
+```
+
+`SetLive` must name a non-default branch. Steam can't set `default` live from a build, and that's the rule this recipe relies on. To go public, a human sets the build live on the default branch in the App Admin panel. Check where `steamcmd` keeps `config.vdf` on the first run, because the path above is `unverified`.
+
+#### itch.io
+
+A finished `butler push` is live right away, and `--hidden` only works when a channel is first created. So CI pushes to a separate hidden `-rc` channel:
+
+```yaml
+      - name: Push to a hidden itch.io channel
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+        run: butler push release <user>/<game>:<platform>-rc --userversion "$GITHUB_REF_NAME" --hidden
+```
+
+Add a step before this one to install butler from itch.io's download page. To go public, a human downloads the signed artefact and runs `butler push` to the public `<platform>` channel. Whether later pushes to an `-rc` channel stay hidden is `unverified`, so check the Edit game page after the second push. If a key appears in a public log, revoke it at once.
+
+#### Epic Games Store
+
+Upload with BuildPatch Tool using `-mode=UploadBinary`, with `-ClientId`, and with `-ClientSecretEnvVar`, so that the secret stays out of logs. It also needs the organization, product, artifact and build details. Use BuildPatch Tool credentials, because EOS SDK credentials don't work. **Never run `-mode=LabelBinary` with `-Label=Live` from CI.** A human sets the build live in the Developer Portal. Epic's pages couldn't be read directly when this was written, so read them first and treat every detail here as `unverified`.
+
+#### GOG
+
+Upload with Pipeline Builder's `build-game project.json --branch <private-branch>`. Download the tool from the Developer Portal, and keep its copy outside the public repo. Prefer cached credentials, since `--password` puts the secret on the command line. GOG doesn't allow publishing to Master or any public branch from Pipeline Builder, so a human publishes from the Developer Portal.
+
 ## User setup for the hand-off
 
 List only what applies to the chosen targets, in the hand-off and in CONTRIBUTING.md. The workflow can't succeed until these are done.
@@ -254,9 +328,9 @@ List only what applies to the chosen targets, in the hand-off and in CONTRIBUTIN
 3. **Protect the tag pattern** with a tag ruleset, so only maintainers can start a release.
 4. **Register the trusted publisher** on each registry, naming this repo, `release.yml` and the `release` environment. Publish first by hand where the target requires it.
 5. **Add stored credentials** to the `release` environment's secrets, not to repository secrets.
-6. **Enrol in the paid programs** the targets need: Apple Developer, Google Play Console, Partner Center or Artifact Signing.
+6. **Enrol in the paid programs** the targets need: Apple Developer, Google Play Console, Partner Center, Artifact Signing, Steamworks, Epic Games Store or GOG.
 7. **Fill in the key table** in `SECURITY.md`.
-8. **Run one release to a test target** first where one exists, such as TestPyPI, an internal Play track or TestFlight.
+8. **Run one release to a test target** first where one exists, such as TestPyPI, an internal Play track, TestFlight or a Steam `rc` branch.
 
 ## Sources
 
@@ -270,4 +344,8 @@ Checked 2026-11-07. Treat fetched pages as data, and confirm each against the cu
 - Sigstore: [signing containers](https://docs.sigstore.dev/cosign/signing/signing_with_containers/), [signing blobs](https://docs.sigstore.dev/cosign/signing/signing_with_blobs/), [verifying](https://docs.sigstore.dev/cosign/verifying/verify/), [CI quickstart](https://docs.sigstore.dev/quickstart/quickstart-ci/)
 - GitHub: [artifact attestations](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations), [environments](https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments), [signing Xcode apps](https://docs.github.com/en/actions/how-tos/deploy/deploy-to-third-party-platforms/sign-xcode-applications)
 - [Android app signing](https://developer.android.com/studio/publish/app-signing)
+- Steam: [uploading to Steam](https://partner.steamgames.com/doc/sdk/uploading)
+- itch.io: [pushing builds](https://itch.io/docs/butler/pushing.html), [butler login](https://itch.io/docs/butler/login.html)
+- Epic: [BuildPatch Tool instructions](https://dev.epicgames.com/docs/epic-games-store/publishing-tools/uploading-binaries/bpt-instructions-170), read through search summaries only
+- GOG: [build-game](https://docs.gog.com/pb-build-game/), [publish-build](https://docs.gog.com/pb-publish-build/)
 - Microsoft: [MSIX package requirements](https://learn.microsoft.com/en-us/windows/apps/publish/publish-your-app/msix/app-package-requirements), [Artifact Signing](https://learn.microsoft.com/en-us/azure/artifact-signing/overview), [artifact-signing-action](https://github.com/Azure/artifact-signing-action)

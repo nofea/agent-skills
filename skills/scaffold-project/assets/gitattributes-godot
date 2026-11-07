@@ -1,0 +1,4 @@
+
+# Godot binary resources. Text scenes (.tscn, .tres) stay in git so they can be merged.
+*.res filter=lfs diff=lfs merge=lfs -text
+*.scn filter=lfs diff=lfs merge=lfs -text

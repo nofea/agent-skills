@@ -11,6 +11,7 @@ Each principle below has the rule, its warning signs, a short pseudocode example
 - [Dependency inversion](#dependency-inversion)
 - [DRY](#dry)
 - [KISS](#kiss)
+- [Game code](#game-code)
 
 ## Single responsibility
 
@@ -250,3 +251,44 @@ function greet(name):
 ```
 
 **Overdone:** Using simplicity as a reason to ignore a real problem. SOLID and DRY rank above KISS, so a concrete violation still gets fixed, in the simplest way that fixes it.
+
+## Game code
+
+**Rule:** The same principles apply. A game adds a hard limit, which is the time each frame gets, and an engine that already owns the main loop and object model.
+
+**Warning signs:**
+
+- A `GameManager` or similar type that everything talks to.
+- Game rules that can only run with a scene, a window or the engine loaded.
+- Allocations in per-frame code that show up in a profiler as stutter.
+- The same balance number written in code and in a data file.
+- Pooling, job systems or a custom ECS with no profiler result behind them.
+
+**Before:**
+
+```text
+class Player extends EngineNode:
+    on_hit(amount):
+        health = health - max(amount - armor, 0)
+        if health <= 0: play death animation
+```
+
+**After:**
+
+```text
+function damage_taken(amount, armor):
+    return max(amount - armor, 0)
+
+class Player extends EngineNode:
+    on_hit(amount):
+        health = health - damage_taken(amount, armor)
+        if health <= 0: play death animation
+```
+
+The rule now runs in a test without the engine, and the engine class stays in charge of the scene.
+
+**Performance:** measure before you restructure, on the target hardware and with a release build, because debug builds mislead. Fix the worst result first. Record the measurement next to the change, so it's clear why the structure exists.
+
+**Engine patterns:** use what the engine gives you, such as scenes, components, signals or systems, before writing your own. A second object model on top of the engine doubles what readers must learn.
+
+**Overdone:** Wrapping every engine call behind your own interface, in case the engine changes. Engine choice is hard to reverse whatever you do, so isolate the rules worth testing and leave the rest as plain engine code.

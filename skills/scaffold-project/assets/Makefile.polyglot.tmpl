@@ -38,12 +38,12 @@ security-sast: ## Static analysis (semgrep, in a container)
 	$(SEMGREP) semgrep scan --config p/default --error --metrics=off --quiet
 
 security-fs: ## Vulnerability + misconfiguration scan of the filesystem (trivy)
-	trivy fs --scanners vuln,misconfig --severity HIGH,CRITICAL --exit-code 1 --quiet --skip-dirs .devenv .
+	trivy fs --scanners vuln,misconfig --severity HIGH,CRITICAL --exit-code 1 --quiet --skip-dirs .devenv {{trivy_skip_extra}} .
 
 ci-security: ## Scan with pinned containers, including the full git history
 	$(GITLEAKS) git /repo --redact --no-banner
 	$(SEMGREP) semgrep scan --config p/default --error --metrics=off --quiet
-	$(TRIVY) fs --scanners vuln,misconfig --severity HIGH,CRITICAL --exit-code 1 --quiet --skip-dirs .devenv .
+	$(TRIVY) fs --scanners vuln,misconfig --severity HIGH,CRITICAL --exit-code 1 --quiet --skip-dirs .devenv {{trivy_skip_extra}} .
 
 # >>> docs (with no Doxygen components, remove this block and `docs-check` from `check`)
 DOCS_COMPONENTS := {{docs_components}}

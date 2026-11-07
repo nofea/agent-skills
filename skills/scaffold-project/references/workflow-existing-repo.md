@@ -7,6 +7,7 @@ The goal is to add what's missing and keep what's there. Never delete anything. 
 Collect these facts before asking the user anything:
 
 - **Languages and components:** manifests (`pyproject.toml`, `setup.py`, `requirements*.txt`, `package.json`, `go.mod`, `Cargo.toml`, `build.gradle*`, `pom.xml`, `*.csproj`/`*.sln`, `CMakeLists.txt`, `meson.build`) and where they sit. More than one manifest root means it's polyglot, so read [polyglot.md](polyglot.md). **Don't move existing components into `apps/`.** Keep their paths and list them in the root Makefile's `COMPONENTS`.
+- **Game engine:** `project.godot` is Godot, `ProjectSettings/ProjectVersion.txt` is Unity, `*.uproject` is Unreal, `bevy` in `Cargo.toml` is Bevy, and `MonoGame.Framework` in a `*.csproj` is MonoGame. Read the [engine reference](project-types.md#game), and see [Game projects](#game-projects).
 - **Existing tooling** (keep all of it):
 
   | Concern | Look for |
@@ -23,6 +24,7 @@ Collect these facts before asking the user anything:
   | Docs | README, CONTRIBUTING, SECURITY, LICENSE, `docs/` |
   | API docs | `Doxyfile`, Sphinx, TypeDoc, Dokka, doc comment lint rules |
   | Agent docs | AGENTS.md, CLAUDE.md, `.cursor/rules`, `.github/copilot-instructions.md` |
+  | Binary assets | `.gitattributes`, `.lfsconfig`, `.p4config`, and large files already in history |
   | Specs | `specs/`, `docs/adr`, `.specify/`, RFCs |
 
 - **Current state:** run the existing build/lint/test commands, if they're cheap and safe, so you know the baseline before changing anything. Don't run deploy scripts or anything that needs credentials.
@@ -52,6 +54,14 @@ For each concern, choose one action:
 | Existing `Doxyfile` | **keep**. Add `docs-check` using it, also with `--report-only`. Don't change their settings. If it sets `EXTRACT_ALL = YES` or `WARN_AS_ERROR`, tell the user the check won't behave as described |
 | Another API docs tool (Sphinx, TypeDoc) | **keep** it as `docs`. Ask before adding `docs-check`, since it would add Doxygen alongside their tool |
 | Other agent rule files | Leave them alone. Mention that AGENTS.md could become the single source |
+
+### Game projects
+
+- **Keep the engine version.** Never upgrade the project or re-import assets to fit the scaffold.
+- **Don't run the engine's build or import on the baseline** unless the user agrees. They can take hours and rewrite generated files.
+- **Git LFS:** if binaries sit outside LFS, report the largest ones and offer `.gitattributes` for new files only. Moving existing files means rewriting history, which is the user's decision.
+- **Perforce or Plastic SCM:** **keep**. Don't add git files. The rest of this scaffold may not apply, so ask first.
+- **Binary assets in reviews:** say which visual scripts you couldn't read, rather than implying they passed.
 
 ### Doc comment check
 

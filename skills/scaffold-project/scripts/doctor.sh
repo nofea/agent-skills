@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Check that the tools a scaffolded project needs are installed.
-# Usage: doctor.sh [python] [typescript] [go] [rust] [java-kotlin] [csharp] [cpp] [generic] [doxygen] [signing]
+# Usage: doctor.sh [python] [typescript] [go] [rust] [java-kotlin] [csharp] [cpp] [godot] [unity] [unreal] [generic] [doxygen] [git-lfs] [signing]
 # Exits 1 if any required tool is missing. Optional tools are only reported.
 # The scaffold-project skill copies this script into generated projects as scripts/doctor.sh.
 set -uo pipefail
@@ -74,6 +74,20 @@ for lang in "$@"; do
       need clang-format clang-format --version
       need clang-tidy clang-tidy --version
       need osv-scanner osv-scanner --version ;;
+    godot|gdscript)
+      need godot godot --version
+      need gdformat gdformat --version
+      need gdlint gdlint --version ;;
+    unity)
+      # The editor stays on the host, because it's licensed and isn't in nixpkgs.
+      need dotnet dotnet --version
+      need "Unity editor (UNITY_PATH)" test -x "${UNITY_PATH:-}" ;;
+    unreal)
+      # The engine stays on the host, because it's licensed and isn't in nixpkgs.
+      need clang-format clang-format --version
+      need "Unreal Engine (UE_ROOT)" test -x "${UE_ROOT:-}/Engine/Build/BatchFiles/RunUAT.sh" ;;
+    git-lfs)
+      need git-lfs git lfs version ;;
     doxygen)
       need doxygen doxygen --version ;;
     signing)
