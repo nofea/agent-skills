@@ -6,16 +6,19 @@ This file tells coding agents (and humans) how to work in this repo. `CLAUDE.md`
 
 ## Commands
 
-Always use the Makefile. It is what CI runs.
+Always use the Makefile, inside `devenv shell`, which provides every tool. CI runs the same verbs in the container from `ci/Containerfile`.
 
 | Command | What it does |
 | --- | --- |
 | `make doctor` | Check that required tools are installed |
 | `make setup` | Install dependencies |
-| `make build` | Build |
+| `make build` | Debug build |
 | `make fmt` | Format code in place |
 | `make lint` | Format check, linters, type checks |
-| `make test` | Run tests |
+| `make test` | Run tests on the debug build |
+| `make release` | Release build. Builds only: never signs or publishes |
+| `make test-release` | Run tests on the release build |
+| `make ci-check` | Run CI's checks in the CI container, with podman or docker |
 | `make security` | Secrets (gitleaks), SAST (semgrep), dependency audit, filesystem scan (trivy) |
 | `make docs` | Build API docs into `docs/api` |
 | `make docs-check` | Fail on undocumented functions and types |
@@ -45,11 +48,15 @@ Always use the Makefile. It is what CI runs.
 
 - Every named function and type gets a doc comment. Add inline comments only where the code can't explain itself.
 - Don't add a dependency without saying why. Prefer the standard library.
+- Add new development tools to `devenv.nix`, and add anything CI needs to `ci/Containerfile` too. Don't install tools on the host.
 - Never commit secrets. Configuration comes from environment variables; document new ones in `.env.example` (if present) and in README.md.
+- Security checks are never debug-only. Authentication, authorization, validation and bounds checks don't go in `assert` or behind a debug flag, because those vanish in release builds.
+- Developer mode is excluded by the build, not by a config flag.
 - Keep README.md (for users) and CONTRIBUTING.md (for developers) accurate when you change behaviour, commands or setup.
 - Don't disable a lint rule or security finding without a comment explaining why.
 
 ## Boundaries
 
 - Don't run `git commit`, `git push`, or change git history unless the user asks.
+- Don't create or push release tags, sign artefacts, publish to a marketplace or handle signing keys. People do that.
 - Don't edit generated or vendored files: {{generated_paths}}.

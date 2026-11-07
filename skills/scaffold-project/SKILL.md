@@ -1,6 +1,6 @@
 ---
 name: scaffold-project
-description: Scaffolds a software project workspace for spec-driven agentic coding. It sets up a specs/ folder, AGENTS.md with a CLAUDE.md import, a layout that fits the language, a Makefile with build/lint/fmt/test/security/check verbs, pre-commit hooks, GitHub Actions CI, security scanning (gitleaks, semgrep, trivy, dependency audit), a Doxygen doc comment check for the languages it supports, and a README plus CONTRIBUTING guide. Works for new projects and existing repos, in one language or several (Python, TypeScript/Node, Go, Rust, Java/Kotlin, C#/.NET, C/C++, or others). Use when the user asks to scaffold, bootstrap, set up, or initialize a project, repo, or workspace, to add specs/AGENTS.md/linting/CI/security scanning/Doxygen to an existing repo, or to make a repo ready for agentic coding.
+description: Scaffolds a software project workspace for spec-driven agentic coding. It sets up a specs/ folder, AGENTS.md with a CLAUDE.md import, a layout that fits the language, a Makefile with build/release/lint/fmt/test/security/check verbs, debug and release build profiles with compiler hardening, pre-commit hooks, GitHub Actions CI, security scanning (gitleaks, semgrep, trivy, dependency audit), an optional signed release workflow for registries and app stores, a Doxygen doc comment check for the languages it supports, and a README plus CONTRIBUTING guide. Works for new projects and existing repos, in one language or several (Python, TypeScript/Node, Go, Rust, Java/Kotlin, C#/.NET, C/C++, or others). Use when the user asks to scaffold, bootstrap, set up, or initialize a project, repo, or workspace, to add specs/AGENTS.md/linting/CI/security scanning/Doxygen/release builds/release signing to an existing repo, to set up publishing to a marketplace, or to make a repo ready for agentic coding.
 ---
 
 # scaffold-project
@@ -9,8 +9,10 @@ Set up a workspace so humans and agents can build software from specs. Every pro
 
 - `specs/` holds what to build. Agents read it before coding and update it as they work.
 - `AGENTS.md` holds how to work in the repo. `CLAUDE.md` is one line, `@AGENTS.md`.
-- `Makefile` provides the same verbs in every language: `build lint fmt test security check doctor`. Languages Doxygen supports also get `docs` and `docs-check`.
-- Pre-commit hooks and a GitHub Actions workflow run those same verbs. `docs-check` runs in `make check` and CI, not in pre-commit.
+- `devenv.nix` provides the development environment, and `ci/Containerfile` provides CI's. CI/CD runs in containers, under podman or docker, so `make ci-check` works the same locally and on the server.
+- `Makefile` provides the same verbs in every language: `build test release test-release ci-check ci-release lint fmt security check doctor`. `build` and `test` are the debug profile, and `release` and `test-release` are what ships. Languages Doxygen supports also get `docs` and `docs-check`.
+- Pre-commit hooks and a GitHub Actions workflow run those same verbs, the workflow in the CI container. `docs-check` runs in `make check` and CI, not in pre-commit.
+- If the user names distribution targets, `.github/workflows/release.yml` signs and publishes the release build when a version tag is pushed.
 - `README.md` (for users) links to `CONTRIBUTING.md` (for developers). The project also gets `SECURITY.md`, `LICENSE`, `.editorconfig` and `.gitignore`.
 
 ## Ground rules
@@ -18,6 +20,7 @@ Set up a workspace so humans and agents can build software from specs. Every pro
 - **Never run git commands that change state.** That includes `git init`, `add`, `commit` and `pre-commit install`. List them as next steps for the user.
 - **Never delete or overwrite existing files without approval.** In existing repos, follow [references/workflow-existing-repo.md](references/workflow-existing-repo.md).
 - **Ask before installing anything** on the user's machine.
+- **Never create signing keys, certificates, accounts or secrets, and never sign or publish.** List these as next steps for the user.
 - Report verification results as they are. If a check fails or was skipped, say so.
 
 ## Workflow
@@ -39,19 +42,20 @@ Ask these in **one** message. Show a default for each. In existing repos, fill i
 1. **Project name.** Default: the folder name.
 2. **One-line purpose.** This goes into README, `specs/product.md` and AGENTS.md.
 3. **Language(s).** Python, TypeScript/Node, Go, Rust, Java/Kotlin, C#/.NET, C/C++, or other.
-4. **Project type** for each component: CLI, library, web service/API, or web app. See [project-types.md](references/project-types.md).
+4. **Project type** for each component: CLI, library, web service/API, web app, mobile app, or desktop app. See [project-types.md](references/project-types.md).
 5. **License.** Default MIT. Apache-2.0 is the other bundled option. "None" means proprietary: skip the LICENSE file and say so in the README.
 6. **GitHub owner/repo.** Optional. Used for badges and the security contact.
+7. **Distribution targets.** Default: none. Where releases go: package registries (PyPI, npm, crates.io, NuGet, Maven Central), containers, GitHub releases, mobile stores (Google Play, Apple App Store), or desktop stores and OS signing (Microsoft Store, Mac App Store, Windows, macOS). If the user names any, read [release-signing.md](references/release-signing.md). Otherwise, skip it and write no `release.yml`.
 
 Read the reference for each language: `references/languages/<lang>.md` (`python`, `typescript`, `go`, `rust`, `java-kotlin`, `csharp`, `cpp`). For anything else use [generic.md](references/languages/generic.md).
 
-Then check the tools. Add `doxygen` to the list if a language uses Doxygen (see [Doc comment check](#doc-comment-check)):
+Then check the tools. Add `doxygen` to the list if a language uses Doxygen (see [Doc comment check](#doc-comment-check)), and `signing` if the project has distribution targets:
 
 ```bash
 bash <skill-dir>/scripts/doctor.sh <lang> [<lang>...] [doxygen]
 ```
 
-If something is missing, list it with the install command from [tool-install.md](references/tool-install.md). **Offer** to install it and wait for a yes. If the user says no, continue anyway: write by hand the files the init tool would have made, and mention the gap in the final report.
+Run this inside `devenv shell` once `devenv.nix` exists. Until then, it reports the host's tools. devenv and a container engine are the only tools the host needs. If something is missing, list it with the install command from [tool-install.md](references/tool-install.md). **Offer** to install it and wait for a yes. If the user says no, continue anyway: write by hand the files the init tool would have made, and mention the gap in the final report.
 
 ### 3. Confirm
 
@@ -67,17 +71,21 @@ Wait for approval. Change the plan if the user asks.
 
 Work in this order:
 
-1. **Native init.** Run the language's init command from its reference. If the toolchain is missing, write the minimal manifest by hand.
-2. **Layout.** Create the folders from the language reference and [project-types.md](references/project-types.md). Leave out sample code and sample tests. Each source folder gets only the minimum the toolchain needs to build, such as an empty entry point or module. If the init tool generated sample tests or demo logic, delete them and trim the entry point. The exception is a web app framework template's demo UI, which stays. In Doxygen languages, give any code you keep the doc comments it needs, so `make docs-check` passes.
-3. **Shared files** from `assets/`. Placeholders are `{{name}}`. Leave GitHub Actions expressions (`${{ … }}`) untouched. `{{ref:owner/action}}` means "pin to the latest release's commit SHA" (see [security.md](references/security.md#pinning-versions)). Fill every placeholder. If a section has nothing to put in it, remove it rather than leaving it empty. Copy `scripts/doctor.sh` into the project as `scripts/doctor.sh`. In Doxygen languages, also copy `scripts/docs-check.sh`. Files are stored without a leading dot, so rename them as you write:
+1. **Dev environment.** Write `devenv.nix` and `devenv.yaml` first, and run the steps below inside `devenv shell`.
+2. **Native init.** Run the language's init command from its reference. If the toolchain is missing, write the minimal manifest by hand.
+3. **Layout.** Create the folders from the language reference and [project-types.md](references/project-types.md). Leave out sample code and sample tests. Each source folder gets only the minimum the toolchain needs to build, such as an empty entry point or module. If the init tool generated sample tests or demo logic, delete them and trim the entry point. The exception is a web app framework template's demo UI, which stays. In Doxygen languages, give any code you keep the doc comments it needs, so `make docs-check` passes.
+4. **Shared files** from `assets/`. Placeholders are `{{name}}`. Leave GitHub Actions expressions (`${{ … }}`) untouched. `{{ref:owner/action}}` means "pin to the latest release's commit SHA" (see [security.md](references/security.md#pinning-versions)). Fill every placeholder. If a section has nothing to put in it, remove it rather than leaving it empty. `{{ci_env}}` stays empty unless the language reference sets it. Copy `scripts/doctor.sh` into the project as `scripts/doctor.sh`. In Doxygen languages, also copy `scripts/docs-check.sh`. Files are stored without a leading dot, so rename them as you write:
 
    | Asset | Written to |
    | --- | --- |
    | `Makefile.tmpl` (or `Makefile.polyglot.tmpl`) | `Makefile` |
+   | `devenv.nix.tmpl` | `devenv.nix` |
+   | `devenv.yaml` | `devenv.yaml` |
    | `editorconfig` | `.editorconfig` |
    | `pre-commit-config.yaml.tmpl` | `.pre-commit-config.yaml` |
    | `ci.yml.tmpl` | `.github/workflows/ci.yml` |
    | `dependabot.yml.tmpl` | `.github/dependabot.yml` |
+   | `release.yml.tmpl` | `.github/workflows/release.yml` (distribution targets only) |
    | `dockerignore` | `.dockerignore` (web service/API only) |
    | `licenses/<id>.txt` | `LICENSE` |
    | `gitleaks.toml` | `.gitleaks.toml` |
@@ -85,7 +93,7 @@ Work in this order:
    | `eclipse-java-allman.xml` | `config/eclipse-java-allman.xml` (Java only) |
    | `Doxyfile.tmpl` | `Doxyfile` (Doxygen languages only) |
 
-4. **Language glue** from the language reference: Makefile target bodies, tool config (lint, format, type-check, test), `.gitignore` entries, pre-commit hooks, CI setup steps, Dependabot ecosystem, and a Dockerfile for services. The wiring for security tools is in [security.md](references/security.md).
+5. **Language glue** from the language reference: Makefile target bodies, tool config (lint, format, type-check, test), `.gitignore` entries, pre-commit hooks, `{{devenv_languages}}` and `{{devenv_packages}}`, `ci/Containerfile`, Dependabot ecosystem, and a Dockerfile for services. The wiring for security tools is in [security.md](references/security.md). The rules for debug and release builds are in [build-profiles.md](references/build-profiles.md).
 
 Test targets must **pass when no tests exist yet**. Each language reference says how.
 
@@ -99,7 +107,7 @@ For a Doxygen language:
 2. Add `doxygen` to `{{languages}}` in the Makefile.
 3. Add `docs/api/` to `.gitignore`, and add the `apt-get` line from [security.md](references/security.md#check_jobs-in-ciymltmpl) to CI.
 
-For anything else, remove the `docs` block from the Makefile and `docs-check` from `check`, and remove the `make docs` rows from AGENTS.md and CONTRIBUTING.md.
+For anything else, remove the `docs` block from the Makefile and `docs-check` from `check` and `ci-check`, and remove the `make docs` rows from AGENTS.md and CONTRIBUTING.md.
 
 `make docs-check` checks that doc comments exist, not that they're accurate. It ignores undocumented fields and constants on purpose. See [scripts/docs-check.sh](scripts/docs-check.sh).
 
@@ -120,11 +128,13 @@ Fill from `assets/`:
 - `CONTRIBUTING.md`: for **developers**. Prerequisites, setup, make verbs, layout, spec workflow, PR checklist.
 - `SECURITY.md`
 
+The `{{release_section}}`, `{{verify_link}}` and `{{release_security_section}}` placeholders come from [release-signing.md](references/release-signing.md#filling-releaseymltmpl). Remove them if there are no distribution targets. For C/C++, set `{{hardening_note}}` to ` Release builds use compiler hardening.` Otherwise remove it.
+
 For sections you can't fill yet (such as usage examples), leave a clearly marked `TODO:` instead of making something up.
 
 ### 7. Verify
 
-Run `make doctor`, then `make check`. If a tool is missing, run the targets that can still work (`make lint build test`) and say which were skipped. Fix failures that the scaffold caused. In existing repos, failures that come from existing code are reported, not fixed.
+Inside `devenv shell`, run `make doctor`, then `make check`. Then run `make ci-check`, because the CI container is what proves the build. If a tool is missing, run the targets that can still work (`make lint build test`) and say which were skipped. Fix failures that the scaffold caused. In existing repos, failures that come from existing code are reported, not fixed.
 
 ### 8. Hand off
 
@@ -134,10 +144,11 @@ Report:
 - the results of verification
 - next steps, in this order:
   1. `git init` (if needed)
-  2. `pre-commit install`
+  2. `devenv shell`, then `pre-commit install`. Commit `devenv.lock` with the rest
   3. review or complete `specs/product.md`
   4. write the first feature spec in `specs/features/001-<name>/`
   5. push to GitHub so CI runs
+  6. with distribution targets: the setup steps from [release-signing.md](references/release-signing.md#user-setup-for-the-hand-off), including any `unverified` targets to check, and whether the repo's plan supports required reviewers
 
 Never commit.
 
@@ -146,6 +157,8 @@ Never commit.
 - [references/specs.md](references/specs.md): spec layout, EARS requirements, feature numbering and status
 - [references/project-types.md](references/project-types.md): layout differences for CLI, library, service and web app
 - [references/security.md](references/security.md): gitleaks, semgrep, trivy, dependency audit, Dependabot
+- [references/build-profiles.md](references/build-profiles.md): debug and release rules for every language
+- [references/release-signing.md](references/release-signing.md): signing and publishing to registries, containers and stores
 - [references/polyglot.md](references/polyglot.md): `apps/` + `packages/`, delegating Makefile, per-component agent docs
 - [references/workflow-existing-repo.md](references/workflow-existing-repo.md): detection, keep-existing rules, change plan, reverse-engineering specs
 - [references/tool-install.md](references/tool-install.md): install commands per tool and OS

@@ -1,0 +1,14 @@
+{ pkgs, ... }:
+
+{
+  packages = with pkgs; [
+    gnumake
+    git
+    pre-commit
+    gitleaks
+    trivy
+{{devenv_packages}}
+  ];
+
+{{devenv_languages}}
+}

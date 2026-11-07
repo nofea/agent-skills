@@ -55,17 +55,29 @@ With `TreatWarningsAsErrors`, NuGet audit warnings (NU1901–NU1904) fail the re
 | Target | Recipe |
 | --- | --- |
 | `setup` | `dotnet restore` |
-| `build` | `dotnet build --no-restore -c Release` |
+| `build` | `dotnet build --no-restore` |
 | `fmt` | `dotnet format` |
 | `fmt-check` | `dotnet format --verify-no-changes` |
 | `lint` | `dotnet build --no-incremental -c Release` (analyzers run during build, and warnings are errors) |
-| `test` | `dotnet test -c Release` (on Microsoft.Testing.Platform, exit code 8 means zero tests ran: use `dotnet test -c Release \|\| [ $$? -eq 8 ]`) |
+| `test` | `dotnet test` (on Microsoft.Testing.Platform, exit code 8 means zero tests ran: use `dotnet test \|\| [ $$? -eq 8 ]`) |
+| `release` | `rm -rf out && dotnet publish src/<Name> -c Release -o out/release && mkdir -p out/symbols && find out/release -name '*.pdb' -exec mv -t out/symbols {} +` (library: `rm -rf out && dotnet pack -c Release -o out/release`) |
+| `test-release` | `dotnet test -c Release` (with the same exit code 8 handling as `test`) |
 | `security-deps` | `out=$$(dotnet list package --vulnerable --include-transitive 2>&1); echo "$$out"; ! grep -q "has the following vulnerable packages" <<<"$$out"` |
-| `clean` | `dotnet clean && rm -rf **/bin **/obj` |
+| `clean` | `dotnet clean && rm -rf out **/bin **/obj` |
+
+`lint` stays in Release, because analyzers should check the configuration that ships.
+
+## Build profiles
+
+Follow [build-profiles.md](../build-profiles.md).
+
+- `#if DEBUG` and `[Conditional("DEBUG")]` code, including `Debug.Assert`, is removed from Release. Don't put security checks there.
+- Keep `TreatWarningsAsErrors` in every configuration, because it's what fails the build on vulnerable packages.
+- **Artefacts:** `out/release/`. **Symbols:** `out/symbols/`.
 
 ## .gitignore
 
-`dotnet new gitignore` output, plus `.env` and `docs/api/`.
+`dotnet new gitignore` output, plus `.devenv*/`, `devenv.local.nix`, `.env`, `docs/api/` and `out/`.
 
 ## Doxygen
 
@@ -89,15 +101,29 @@ The `obj` exclusion matters, because the build writes generated `.cs` files ther
         types: [c#]
 ```
 
-## CI setup steps
+## devenv
 
-```yaml
-      - uses: actions/setup-dotnet@<sha> # vX
-        with:
-          global-json-file: global.json
+`{{devenv_languages}}`:
+```nix
+  languages.dotnet = {
+    enable = true;
+    package = pkgs.dotnet-sdk_10;   # match global.json
+  };
 ```
 
-Dependabot ecosystem: `nuget`. Docker ignore extras: `**/bin **/obj`.
+## CI container
+
+`ci/Containerfile`:
+```dockerfile
+FROM mcr.microsoft.com/dotnet/sdk:<lts>
+RUN apt-get update && apt-get install -y --no-install-recommends make git && rm -rf /var/lib/apt/lists/*
+ENV HOME=/tmp NUGET_PACKAGES=/tmp/nuget DOTNET_CLI_TELEMETRY_OPTOUT=1
+USER 65532:65532
+```
+
+Replace each `<version>` with the latest release. Check that `dotnet-sdk_10` is still the LTS, and match it to `global.json` and the `<lts>` images.
+
+Dependabot ecosystem: `nuget`, and `docker` for `/ci`. Docker ignore extras: `**/bin **/obj`.
 
 ## Dockerfile (service)
 
@@ -105,7 +131,7 @@ Dependabot ecosystem: `nuget`. Docker ignore extras: `**/bin **/obj`.
 FROM mcr.microsoft.com/dotnet/sdk:<lts> AS build
 WORKDIR /src
 COPY . .
-RUN dotnet publish src/<Name> -c Release -o /out
+RUN dotnet publish src/<Name> -c Release -o /out && find /out -name '*.pdb' -delete
 
 FROM mcr.microsoft.com/dotnet/aspnet:<lts>
 WORKDIR /app

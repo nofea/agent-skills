@@ -61,12 +61,22 @@ Java formatting uses Allman braces, which google-java-format can't produce. Copy
 | `fmt-check` | `./gradlew spotlessCheck` |
 | `lint` | `./gradlew pmdMain` (Kotlin: `./gradlew detekt`) |
 | `test` | `./gradlew test` |
+| `release` | `./gradlew assemble` (Android: `./gradlew bundleRelease`) |
+| `test-release` | `$(MAKE) test` (the JVM has no separate release compile; Android: `./gradlew testReleaseUnitTest`) |
 | `security-deps` | `./gradlew dependencyCheckAnalyze` |
 | `clean` | `./gradlew clean` |
 
+## Build profiles
+
+Follow [build-profiles.md](../build-profiles.md).
+
+- JVM `assert` is off unless the JVM runs with `-ea`, so it never protects production. Use a normal check for anything security-related.
+- **Android:** the `debug` and `release` build types are separate. Shrinking with R8 produces `mapping.txt`, which is the symbol file to retain. Set `debuggable` to false for release.
+- **Artefacts:** `build/libs/` or `build/distributions/` (Android: `build/outputs/bundle/release/`).
+
 ## .gitignore
 
-`.gradle/ build/ out/ .kotlin/ *.class .idea/ *.iml docs/api/ .env`. **Commit** `gradle/wrapper/gradle-wrapper.jar`.
+`.devenv*/ devenv.local.nix .gradle/ build/ out/ .kotlin/ *.class .idea/ *.iml docs/api/ .env`. **Commit** `gradle/wrapper/gradle-wrapper.jar`.
 
 ## Doxygen
 
@@ -92,29 +102,40 @@ Java only. Doxygen can't read Kotlin, so a Kotlin project skips this section and
 
 Lint runs in CI rather than pre-commit, because starting Gradle is slow.
 
-## CI setup steps
+## devenv
 
-```yaml
-      - uses: actions/setup-java@<sha> # vX
-        with:
-          distribution: temurin
-          java-version: "21"
-      - uses: gradle/actions/setup-gradle@<sha> # vX
-    env:
-      NVD_API_KEY: ${{ secrets.NVD_API_KEY }}     # job-level
+`{{devenv_languages}}`:
+```nix
+  languages.java = {
+    enable = true;
+    jdk.package = pkgs.jdk21;
+    gradle.enable = true;
+  };
 ```
 
-Dependabot ecosystem: `gradle`. Docker ignore extras: `.gradle build out`.
+## CI container
+
+`ci/Containerfile`:
+```dockerfile
+FROM docker.io/library/eclipse-temurin:21-jdk
+RUN apt-get update && apt-get install -y --no-install-recommends make git && rm -rf /var/lib/apt/lists/*
+ENV HOME=/tmp GRADLE_USER_HOME=/tmp/gradle
+USER 65532:65532
+```
+
+Replace each `<version>` with the latest release. Set `{{ci_env}}` to `-e NVD_API_KEY` in the Makefile, and add `NVD_API_KEY: ${{ secrets.NVD_API_KEY }}` to the job's `env` in `ci.yml`.
+
+Dependabot ecosystem: `gradle`, and `docker` for `/ci`. Docker ignore extras: `.gradle build out`.
 
 ## Dockerfile (service)
 
 ```dockerfile
-FROM eclipse-temurin:21-jdk AS build
+FROM docker.io/library/eclipse-temurin:21-jdk AS build
 WORKDIR /src
 COPY . .
 RUN ./gradlew --no-daemon :app:installDist
 
-FROM eclipse-temurin:21-jre
+FROM docker.io/library/eclipse-temurin:21-jre
 RUN useradd --uid 10001 --create-home app
 COPY --from=build /src/app/build/install/app /opt/app
 USER app

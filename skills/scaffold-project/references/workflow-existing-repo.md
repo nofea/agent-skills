@@ -16,6 +16,9 @@ Collect these facts before asking the user anything:
   | Tests | the framework and test directories in use |
   | Hooks | `.pre-commit-config.yaml`, husky, lefthook |
   | CI | `.github/workflows/*`, `.gitlab-ci.yml`, others |
+  | Dev environment | `devenv.nix`, `flake.nix`, `shell.nix`, `.devcontainer/`, `mise.toml`, `.tool-versions` |
+  | Build profiles | CMake presets, `[profile.release]`, build types, `release` targets, compiler flags |
+  | Release | release workflows, `goreleaser`, `fastlane`, `semantic-release`, signing config |
   | Security | gitleaks/trufflehog, semgrep/CodeQL, trivy/snyk, dependabot/renovate |
   | Docs | README, CONTRIBUTING, SECURITY, LICENSE, `docs/` |
   | API docs | `Doxyfile`, Sphinx, TypeDoc, Dokka, doc comment lint rules |
@@ -35,6 +38,11 @@ For each concern, choose one action:
 | Present, partly covers it | **modify**: add the missing piece (e.g. a gitleaks hook in an existing pre-commit config) |
 | Non-GitHub CI | **keep**. Offer to add the equivalent steps to it, and don't add GitHub Actions unless the user asks |
 | Renovate instead of Dependabot | **keep**, and skip dependabot.yml |
+| Another dev environment tool | **keep**. Offer devenv, and don't add it unless the user asks |
+| CI with native setup steps | **keep**. Offer `ci/Containerfile` and the `ci-*` verbs as a proposed change |
+| Existing build profiles | **keep**. Report gaps against [build-profiles.md](build-profiles.md), and offer missing flags as a proposed change |
+| Existing `release` target that signs, uploads or tags | **keep**, report the clash, and ask. `make release` must only build |
+| Existing release workflow | **keep**. Report gaps against [release-signing.md](release-signing.md). Don't add a competing `release.yml` |
 | Existing task runner that isn't make | **create** a thin Makefile whose verbs call the existing runner (`lint: ; just lint`). Don't port the recipes |
 | Existing Makefile | **modify**: add missing verbs only. Never rename or change existing targets. If a verb name is already used for something else, report the clash and ask |
 | Existing CLAUDE.md, no AGENTS.md | Propose moving its content into AGENTS.md and making CLAUDE.md `@AGENTS.md`. **Ask first**, because it rewrites their file |

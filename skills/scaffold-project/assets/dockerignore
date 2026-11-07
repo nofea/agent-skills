@@ -4,6 +4,9 @@
 .env.*
 !.env.example
 specs
+.devenv*
+devenv.*
+ci
 *.md
 !README.md
 # language build outputs and caches (extend from the language reference)

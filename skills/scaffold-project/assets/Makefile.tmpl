@@ -4,8 +4,18 @@
 SHELL := bash
 .SHELLFLAGS := -eu -o pipefail -c
 
-.PHONY: help doctor setup build fmt fmt-check lint test security security-deps \
-        security-secrets security-sast security-fs check clean
+# Containers run CI, here and on the CI server. Both podman and docker work.
+# Set CONTAINER to choose one. CI_ROOT and CI_WORKDIR change what gets mounted.
+CONTAINER ?= $(shell command -v podman 2>/dev/null || command -v docker 2>/dev/null)
+CI_IMAGE ?= {{project_name}}-ci
+CI_ROOT ?= $(CURDIR)
+CI_WORKDIR ?= /src
+CI_ENV := {{ci_env}}
+CI_USER = $(if $(findstring podman,$(CONTAINER)),--userns=keep-id) --user $(shell id -u):$(shell id -g)
+CI_RUN = $(CONTAINER) run --rm $(CI_USER) -e CI=true $(CI_ENV) -v "$(CI_ROOT):/src:Z" -w $(CI_WORKDIR) $(CI_IMAGE)
+
+.PHONY: help doctor setup build fmt fmt-check lint test release test-release \
+        ci-image ci-check ci-release security security-deps check clean
 
 help: ## List targets
 	@grep -hE '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-18s %s\n", $$1, $$2}'
@@ -16,7 +26,7 @@ doctor: ## Check that required tools are installed
 setup: ## Install project dependencies
 {{setup_recipe}}
 
-build: ## Compile / package the project
+build: ## Debug build
 {{build_recipe}}
 
 fmt: ## Format code in place
@@ -28,8 +38,23 @@ fmt-check: ## Fail if code is not formatted
 lint: fmt-check ## Format check + linters + type checks
 {{lint_recipe}}
 
-test: ## Run tests (passes when no tests exist yet)
+test: ## Run tests on the debug build (passes when no tests exist yet)
 {{test_recipe}}
+
+release: ## Release build. Builds only: never signs or publishes
+{{release_recipe}}
+
+test-release: ## Run tests on the release build
+{{test_release_recipe}}
+
+ci-image: ## Build the CI container
+	$(CONTAINER) build -t $(CI_IMAGE) ci
+
+ci-check: ci-image ## Lint, build and test in the CI container
+	$(CI_RUN) make setup lint docs-check build test release test-release security-deps
+
+ci-release: ci-image ## Build and test the release in the CI container. This is what ships
+	$(CI_RUN) make setup release test-release
 
 security: security-deps security-secrets security-sast security-fs ## All security scans
 
@@ -37,17 +62,27 @@ security-deps: ## Audit dependencies for known vulnerabilities
 {{security_deps_recipe}}
 
 # >>> repo-wide (remove this block from component Makefiles in polyglot repos)
+.PHONY: security-secrets security-sast security-fs ci-security
+GITLEAKS = $(CONTAINER) run --rm $(CI_USER) -v "$(CURDIR):/repo:Z" ghcr.io/gitleaks/gitleaks:{{gitleaks_version}}
+SEMGREP = $(CONTAINER) run --rm $(CI_USER) -e HOME=/tmp -v "$(CURDIR):/src:Z" -w /src docker.io/semgrep/semgrep:{{semgrep_version}}
+TRIVY = $(CONTAINER) run --rm $(CI_USER) -e HOME=/tmp -v "$(CURDIR):/src:Z" -w /src docker.io/aquasec/trivy:{{trivy_version}}
+
 security-secrets: ## Scan the working tree for secrets (gitleaks)
 	gitleaks dir . --redact --no-banner
 
-security-sast: ## Static analysis (semgrep)
-	semgrep scan --config p/default --error --metrics=off --quiet
+security-sast: ## Static analysis (semgrep, in a container)
+	$(SEMGREP) semgrep scan --config p/default --error --metrics=off --quiet
 
 security-fs: ## Vulnerability + misconfiguration scan of the filesystem (trivy)
-	trivy fs --scanners vuln,misconfig --severity HIGH,CRITICAL --exit-code 1 --quiet .
+	trivy fs --scanners vuln,misconfig --severity HIGH,CRITICAL --exit-code 1 --quiet --skip-dirs .devenv .
+
+ci-security: ## Scan with pinned containers, including the full git history
+	$(GITLEAKS) git /repo --redact --no-banner
+	$(SEMGREP) semgrep scan --config p/default --error --metrics=off --quiet
+	$(TRIVY) fs --scanners vuln,misconfig --severity HIGH,CRITICAL --exit-code 1 --quiet --skip-dirs .devenv .
 # <<< repo-wide
 
-# >>> docs (for languages without Doxygen support, remove this block and `docs-check` from `check`)
+# >>> docs (for languages without Doxygen support, remove this block and `docs-check` from `check` and `ci-check`)
 .PHONY: docs docs-check
 
 docs: ## Build API docs into docs/api (doxygen)
@@ -57,7 +92,7 @@ docs-check: ## Fail on undocumented functions and types
 	@bash scripts/docs-check.sh {{docs_check_args}}
 # <<< docs
 
-check: lint docs-check build test security ## Everything CI runs
+check: lint docs-check build test release test-release security ## Everything CI runs
 
 clean: ## Remove build artifacts
 {{clean_recipe}}

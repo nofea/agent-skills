@@ -15,3 +15,7 @@ Include what you found, how to reproduce it, and the impact you expect. We aim t
 ## How this project checks itself
 
 Every change runs secret scanning (gitleaks), static analysis (semgrep), dependency vulnerability audits, and filesystem/configuration scanning (trivy). Dependabot proposes dependency updates.
+
+Every change also builds and tests the release configuration, so what's tested is what ships.{{hardening_note}}
+
+{{release_security_section}}

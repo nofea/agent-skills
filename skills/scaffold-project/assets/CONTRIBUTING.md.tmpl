@@ -4,16 +4,19 @@
 
 {{prerequisites}}
 
-Shared tooling: `make`, [pre-commit](https://pre-commit.com), [gitleaks](https://github.com/gitleaks/gitleaks), [semgrep](https://semgrep.dev), [trivy](https://trivy.dev).
+You need [devenv](https://devenv.sh/getting-started/) for development, and [podman](https://podman.io) or Docker for CI checks. devenv provides everything else, including `make`, [pre-commit](https://pre-commit.com), [gitleaks](https://github.com/gitleaks/gitleaks) and [trivy](https://trivy.dev). [semgrep](https://semgrep.dev) runs in a container.
 
-Run `make doctor` to see what's missing.
+Run `make doctor` inside `devenv shell` to see what's missing.
 
 ## Setup
 
 ```bash
+devenv shell
 make setup
 pre-commit install
 ```
+
+Run the commands below inside `devenv shell`. Add new tools to `devenv.nix`, and commit `devenv.lock`.
 
 ## Everyday commands
 
@@ -21,14 +24,20 @@ pre-commit install
 | --- | --- |
 | `make fmt` | Format code |
 | `make lint` | Check formatting, run linters and type checks |
-| `make build` | Build |
-| `make test` | Run tests |
+| `make build` | Make a debug build |
+| `make test` | Run tests on the debug build |
+| `make release` | Make a release build, which is what ships. It never signs or publishes |
+| `make test-release` | Run tests on the release build |
+| `make ci-check` | Run CI's checks in the CI container, as the server does |
+| `make ci-release` | Build the release in the CI container. Only this kind of build ships, because one from devenv links to `/nix/store` |
 | `make security` | Scan for secrets, insecure code, vulnerable dependencies and misconfigurations |
 | `make docs` | Build API docs into `docs/api` |
 | `make docs-check` | Check that functions and types have doc comments |
-| `make check` | Run all of the above, as CI does |
+| `make check` | Run the checks in devenv: everything except the `ci-*` commands |
 
 {{extra_commands}}
+
+{{release_section}}
 
 ## Project layout
 
@@ -53,3 +62,4 @@ For a new feature, copy an existing feature folder (or write one from scratch), 
 - [ ] `make check` passes locally
 - [ ] README.md / CONTRIBUTING.md updated if usage, configuration or setup changed
 - [ ] No secrets, and no disabled lint/security rules without a comment saying why
+- [ ] No security checks in `assert` or debug-only code

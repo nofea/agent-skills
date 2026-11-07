@@ -21,7 +21,7 @@ npx skills add nofea/agent-skills@<skill-name> -g -y     # global, no prompts
 
 ### scaffold-project
 
-Gives a repo the same shape in any language, so humans and agents can build from specs. Install it, then ask your agent to scaffold, bootstrap or set up a project, or to add specs, linting, CI or security scanning to an existing repo.
+Gives a repo the same shape in any language, so humans and agents can build from specs. Install it, then ask your agent to scaffold, bootstrap or set up a project, or to add specs, linting, CI, security scanning or release signing to an existing repo.
 
 ```bash
 npx skills add nofea/agent-skills@scaffold-project
@@ -31,23 +31,27 @@ What a scaffolded project gets:
 
 - **Specs:** `specs/` holds the product, the architecture and one folder per feature. Agents read it before coding and update it as they work.
 - **Agent instructions:** `AGENTS.md` covers how to work in the repo, and `CLAUDE.md` imports it.
-- **Language-appropriate layout:** folders and tool config for Python, TypeScript/Node, Go, Rust, Java/Kotlin, C#/.NET or C/C++, with a generic fallback for anything else. Projects can be a CLI, library, web service/API or web app.
+- **Language-appropriate layout:** folders and tool config for Python, TypeScript/Node, Go, Rust, Java/Kotlin, C#/.NET or C/C++, with a generic fallback for anything else. Projects can be a CLI, library, web service/API, web app, mobile app or desktop app.
 - **Allman braces:** generated formatter configs use Allman in C, C++, C#, Java, PHP and Swift. Other languages keep their standard style.
-- **Makefile:** the same verbs in every language: `build`, `lint`, `fmt`, `test`, `security`, `check` and `doctor`.
+- **Dev environment:** `devenv.nix` gives everyone the same tools, with `devenv.lock` pinning them.
+- **CI/CD in containers:** `ci/Containerfile` holds CI's toolchain, so `make ci-check` runs the same under podman or Docker, locally and on the server. Linux releases are built there too, because a binary built in devenv can link to `/nix/store`.
+- **Makefile:** the same verbs in every language: `build`, `test`, `release`, `test-release`, `ci-check`, `ci-release`, `lint`, `fmt`, `security`, `check` and `doctor`.
+- **Debug and release builds:** `build` and `test` use the debug profile, with sanitizers where the language has them. `release` and `test-release` use what ships, with compiler hardening for C/C++, and CI tests both.
 - **Doc comment check:** `make docs` builds API docs and `make docs-check` fails on undocumented functions and types, using Doxygen. It covers Python, Java, C#, C/C++ and PHP, among others, but not Go, Rust, TypeScript or Kotlin. In existing repos it only reports until you turn it on.
 - **Automation:** pre-commit hooks, GitHub Actions CI and Dependabot.
 - **Security scanning:** gitleaks, semgrep, trivy and a dependency audit.
+- **Signed releases (optional):** name your distribution targets, and a tag-triggered `release.yml` builds, signs and publishes behind an approval step. It covers package registries, containers, GitHub releases, mobile app stores, and desktop stores with OS signing.
 - **Docs:** `README.md` for users, `CONTRIBUTING.md` for developers, plus `SECURITY.md`, `LICENSE`, `.editorconfig` and `.gitignore`.
 
 How it works:
 
 1. It detects whether the repo is new, existing or polyglot.
-2. It asks a few questions in one message: name, purpose, languages, project type, license and GitHub repo.
+2. It asks a few questions in one message: name, purpose, languages, project type, license, GitHub repo and distribution targets.
 3. It shows a file plan and waits for your approval before writing anything.
 4. It generates the files and specs. In an existing repo, it reverse-engineers the specs from the code.
 5. It runs `make doctor` and `make check`, then reports the results and your next steps.
 
-The skill never runs git commands that change state, so committing stays with you. It also asks before installing tools or overwriting existing files.
+The skill never runs git commands that change state, so committing stays with you. It also asks before installing tools or overwriting existing files. It never creates signing keys or publishes anything. It lists that setup for you instead.
 
 ### readable-code
 

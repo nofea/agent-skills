@@ -56,14 +56,24 @@ addopts = "-ra"
 | `fmt-check` | `uv run ruff format --check .` |
 | `lint` | `uv run ruff check . && uv run mypy` |
 | `test` | `uv run pytest \|\| [ $$? -eq 5 ]` (exit 5 = no tests collected) |
+| `release` | `rm -rf dist && uv build` |
+| `test-release` | `$(MAKE) test` (Python has no separate release compile) |
 | `security-deps` | `uv run pip-audit --skip-editable` |
 | `clean` | `rm -rf dist build .pytest_cache .mypy_cache .ruff_cache` |
 
 Each recipe goes tab-indented under its target. Join multi-step recipes with `&&`, or put each step on its own line.
 
+## Build profiles
+
+Follow [build-profiles.md](../build-profiles.md).
+
+- `python -O` removes `assert` statements. Ruff's `S101` rule flags them outside `tests/`, so keep it on, and don't suppress it for a security check.
+- Services ship through the Dockerfile rather than the wheel, so for them `make release` proves packaging only.
+- **Artefacts:** `dist/`.
+
 ## .gitignore
 
-`.venv/ __pycache__/ *.py[cod] dist/ build/ *.egg-info/ .mypy_cache/ .ruff_cache/ .pytest_cache/ .coverage htmlcov/ docs/api/ .env`
+`.devenv*/ devenv.local.nix .venv/ __pycache__/ *.py[cod] dist/ build/ *.egg-info/ .mypy_cache/ .ruff_cache/ .pytest_cache/ .coverage htmlcov/ docs/api/ .env`
 
 ## Doxygen
 
@@ -87,21 +97,36 @@ Docstrings must start with `"""!` and use `@brief`, `@param`, `@return` and `@th
         types: [python]
 ```
 
-## CI setup steps
+## devenv
 
-```yaml
-      - uses: astral-sh/setup-uv@<sha> # vX
-        with:
-          enable-cache: true
-      # uv installs the Python from .python-version automatically
+`{{devenv_languages}}`:
+```nix
+  languages.python = {
+    enable = true;
+    package = pkgs.python313;   # match .python-version
+    uv.enable = true;
+  };
 ```
 
-Dependabot ecosystem: `uv`. Docker ignore extras: `.venv __pycache__ .mypy_cache .ruff_cache .pytest_cache dist`.
+## CI container
+
+`ci/Containerfile`:
+```dockerfile
+FROM docker.io/library/python:3.13-slim
+COPY --from=ghcr.io/astral-sh/uv:<version> /uv /usr/local/bin/uv
+RUN apt-get update && apt-get install -y --no-install-recommends make git && rm -rf /var/lib/apt/lists/*
+ENV HOME=/tmp UV_CACHE_DIR=/tmp/uv
+USER 65532:65532
+```
+
+Replace each `<version>` with the latest release. Match the Python tag to `.python-version`. Keep this tag, `.python-version` and the `package` in `devenv.nix` on the same version. devenv stops uv from downloading Python, so a mismatch fails every target.
+
+Dependabot ecosystem: `uv`, and `docker` for `/ci`. Docker ignore extras: `.venv __pycache__ .mypy_cache .ruff_cache .pytest_cache dist`.
 
 ## Dockerfile (service)
 
 ```dockerfile
-FROM python:3.13-slim AS build
+FROM docker.io/library/python:3.13-slim AS build
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 WORKDIR /app
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
@@ -110,7 +135,7 @@ RUN uv sync --frozen --no-dev --no-install-project
 COPY src ./src
 RUN uv sync --frozen --no-dev
 
-FROM python:3.13-slim
+FROM docker.io/library/python:3.13-slim
 RUN useradd --create-home --uid 10001 app
 WORKDIR /app
 COPY --from=build --chown=app /app /app
